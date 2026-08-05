@@ -1,0 +1,892 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spool Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --concrete:#D2D6D4;--panel:#FBFBF9;--panel2:#F0F1EE;
+  --ink:#191C1E;--muted:#5C6468;--rule:#B6BAB9;--rule2:#DDE0DD;
+  --oxide:#B33A24;--warn:#C88A00;--ok:#3D6B4A;--tail:#C7CBC8;
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--concrete);color:var(--ink);
+  font:400 15px/1.5 "IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px 80px}
+header{padding:34px 0 20px;border-bottom:3px solid var(--ink)}
+.tag{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+h1{font:700 46px/0.9 "Barlow Condensed",sans-serif;letter-spacing:.02em;text-transform:uppercase;margin:0}
+h1 em{font-style:normal;color:var(--oxide)}
+.sub{font:500 13px/1.3 "IBM Plex Mono",monospace;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px}
+section{background:var(--panel);border:1px solid var(--rule);border-top:none;padding:22px 24px 26px}
+section:first-of-type{border-top:1px solid var(--rule)}
+.step{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--panel);background:var(--ink);display:inline-block;padding:5px 9px;margin-bottom:14px}
+.step.hot{background:var(--oxide)}
+h2{font:600 26px/1.1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.03em;margin:0 0 4px}
+h5{font:600 13px/1 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);margin:22px 0 9px}
+.hint{color:var(--muted);font-size:13.5px;margin:0 0 16px;max-width:76ch}
+#drop{border:2px dashed var(--rule);background:var(--panel2);padding:34px 20px;text-align:center;cursor:pointer}
+#drop:hover,#drop.hot{border-color:var(--oxide);background:#F7F1EF}
+#drop b{font:600 20px/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;display:block}
+#drop span{font-size:13px;color:var(--muted)}
+textarea{width:100%;min-height:96px;margin-top:12px;padding:10px;border:1px solid var(--rule);
+  font:400 12.5px/1.45 "IBM Plex Mono",monospace;background:#fff;color:var(--ink);resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
+button{font:600 13px/1 "IBM Plex Sans",sans-serif;padding:10px 18px;border:1px solid var(--ink);
+  background:var(--ink);color:var(--panel);cursor:pointer}
+button:hover{background:var(--oxide);border-color:var(--oxide)}
+button.ghost{background:transparent;color:var(--ink)}
+button.ghost:hover{background:var(--ink);color:var(--panel)}
+button.sm{padding:6px 11px;font-size:12px}
+button:disabled{background:var(--rule);border-color:var(--rule);color:#8A8F92;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,#drop:focus-visible{
+  outline:3px solid var(--oxide);outline-offset:2px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font:600 11px/1.2 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.07em;
+  text-align:left;color:var(--muted);border-bottom:2px solid var(--ink);padding:7px 8px;white-space:nowrap}
+td{padding:5px 8px;border-bottom:1px solid var(--rule2);vertical-align:middle}
+tbody tr:hover{background:var(--panel2)}
+.num{font-family:"IBM Plex Mono",monospace;text-align:right;font-variant-numeric:tabular-nums}
+input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1px solid var(--rule);
+  background:#fff;color:var(--ink);width:100%}
+.scroll{overflow-x:auto;border:1px solid var(--rule2)}
+.maps{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px}
+.map{border:1px solid var(--rule);padding:8px 10px;background:var(--panel2)}
+.map label{font:600 10.5px/1.3 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);display:block;margin-bottom:5px}
+.map .found{color:var(--ok)}.map .miss{color:var(--oxide)}
+.fld label{font:600 10.5px/1 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);display:block;margin-bottom:5px}
+.fld small{display:block;color:var(--muted);font-size:11.5px;margin-top:4px;line-height:1.35}
+.fld.w{max-width:200px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--rule);background:var(--panel2);padding:6px 11px;cursor:pointer;
+  font:500 12.5px/1 "IBM Plex Mono",monospace;user-select:none}
+.chip.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+/* issue cards */
+.iss{border:1px solid var(--rule);border-left:4px solid var(--muted);background:var(--panel2);
+  padding:12px 14px;margin-bottom:9px}
+.iss.stop{border-left-color:var(--oxide);background:#F8EFEC}
+.iss.ask{border-left-color:var(--warn);background:#FBF6EA}
+.iss.note{border-left-color:var(--muted)}
+.iss h6{font:600 14px/1.3 "IBM Plex Sans",sans-serif;margin:0 0 4px}
+.iss p{margin:0;font-size:13px;color:var(--muted)}
+.iss .ex{font:400 11.5px/1.6 "IBM Plex Mono",monospace;color:var(--muted);margin-top:6px}
+.iss .act{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
+.iss .act input,.iss .act select{width:auto;min-width:110px}
+.clean{border-left-color:var(--ok);background:#EEF4EF}
+/* reels */
+.reel{border:1px solid var(--rule);background:var(--panel2);margin-bottom:10px}
+.reel-hd{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:8px 11px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.reel-id{font:600 15px/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em}
+.reel-meta{font:400 11.5px/1 "IBM Plex Mono",monospace;color:var(--muted)}
+.bar{display:flex;height:30px;background:var(--tail);
+  background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(0,0,0,.055) 5px 10px)}
+.seg{border-right:1px solid rgba(255,255,255,.85);overflow:hidden;
+  font:500 10.5px/30px "IBM Plex Mono",monospace;color:#fff;text-align:center;white-space:nowrap}
+.reel-pulls{padding:7px 11px 9px;font:400 12px/1.6 "IBM Plex Mono",monospace;color:var(--muted)}
+.reel-pulls span{display:inline-block;margin-right:14px}
+.grp{margin:26px 0 10px;padding-bottom:5px;border-bottom:2px solid var(--ink);
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.grp h3{font:700 24px/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.03em;margin:0}
+.grp .tot{font:500 12px/1 "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase}
+.desig{margin:18px 0 0}
+.desig-hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.desig-hd h4{font:600 19px/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0}
+.desig-hd .lbl{font:400 12px/1.3 "IBM Plex Mono",monospace;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);margin-bottom:6px}
+.stat{background:var(--panel);padding:11px 13px}
+.stat b{display:block;font:600 27px/1 "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.stat span{font:600 10.5px/1.3 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);display:block;margin-top:4px}
+.stat.bad b{color:var(--oxide)}
+.hidden{display:none}
+@media print{body{background:#fff}.noprint{display:none!important}section{border:none;padding:0 0 14px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header><div class="tag">
+  <h1>Spool <em>Sheet</em></h1>
+  <div class="sub">Takeoff CSV &rarr; packed reel order</div>
+</div></header>
+
+<section class="noprint">
+  <div class="step">1 &middot; Takeoff</div>
+  <h2>Drop the CSV</h2>
+  <p class="hint">Any takeoff export, any column order, any job. Headers are matched by meaning, not spelling, and columns it doesn't recognize ride along to the pull sheet untouched. Nothing needs deleting first.</p>
+  <div id="drop" tabindex="0" role="button" aria-label="Choose or drop a CSV file">
+    <b>Drop CSV here</b><span>or click to choose a file</span></div>
+  <textarea id="paste" placeholder="…or paste the CSV text here" aria-label="Paste CSV text"></textarea>
+  <div class="row">
+    <button id="loadPaste" class="ghost">Load pasted text</button>
+    <button id="demo" class="ghost">Load sample</button>
+    <span id="fileinfo" class="reel-meta"></span>
+  </div>
+  <input type="file" id="file" accept=".csv,.txt" class="hidden">
+</section>
+
+<section id="s2" class="hidden noprint">
+  <div class="step">2 &middot; Columns</div>
+  <h2>What it found</h2>
+  <p class="hint">Only two matter: something with a length in it, and something that says which runs are the same cable. Change anything it got wrong.</p>
+  <div class="maps" id="maps"></div>
+  <h5>What makes two runs the same cable?</h5>
+  <p class="hint" style="margin-bottom:9px">Runs that agree on every column you pick here get spooled together. On a job with no designation scheme, pick wire size and ground size instead.</p>
+  <div class="chips" id="idchips"></div>
+</section>
+
+<section id="s3" class="hidden noprint">
+  <div class="step" id="s3step">3 &middot; Check</div>
+  <h2>Anything look wrong?</h2>
+  <p class="hint">Everything below can be answered right here. Nothing is blocking unless it says so.</p>
+  <div id="issues"></div>
+</section>
+
+<section id="s4" class="hidden noprint">
+  <div class="step">4 &middot; Cables</div>
+  <h2>Reels and parallels</h2>
+  <p class="hint">One row per cable found in the takeoff. Reel length is the put-up you can actually buy it on &mdash; 1000' on small wire, 500 or 250 or 200 on the big stuff. Colors are free text and only used to group the printout.</p>
+  <div class="row" style="margin-top:0">
+    <div class="fld w"><label for="defReel">Default reel (ft)</label><input id="defReel" class="num" list="putups" value="500"></div>
+    <button id="bulkAll" class="ghost">Set every cable to this</button>
+    <button id="keyExport" class="ghost">Export cable list</button>
+    <button id="keyFileBtn" class="ghost">Load cable list</button>
+    <input type="file" id="keyFile" accept=".csv,.txt" class="hidden">
+  </div>
+  <datalist id="putups"><option value="200"><option value="250"><option value="300"><option value="400">
+    <option value="500"><option value="750"><option value="1000"><option value="1500"><option value="2500"></datalist>
+  <div class="scroll" style="margin-top:14px"><table id="keytbl"></table></div>
+</section>
+
+<section id="s5" class="hidden noprint">
+  <div class="step">5 &middot; Terminations</div>
+  <h2>Extra wire by location</h2>
+  <p class="hint">Every value found in the start and end location columns, listed once. A pull gets its start allowance plus its end allowance. Set the default, apply keyword rules, then fix the odd ones.</p>
+  <div class="scroll" style="margin-bottom:10px"><table id="ruletbl"></table></div>
+  <div class="row" style="margin-top:0">
+    <button id="ruleAdd" class="ghost sm">Add rule</button>
+    <div class="fld w"><label for="defExtra">Default (ft)</label><input id="defExtra" class="num" type="number" value="15" min="0"></div>
+    <button id="applyRules">Apply</button>
+    <button id="locExport" class="ghost">Export</button>
+    <button id="locFileBtn" class="ghost">Load</button>
+    <input type="file" id="locFile" accept=".csv,.txt" class="hidden">
+  </div>
+  <div class="scroll" style="max-height:300px;overflow-y:auto;margin-top:14px"><table id="loctbl"></table></div>
+</section>
+
+<section id="s6" class="hidden noprint">
+  <div class="step">6 &middot; Packing</div>
+  <h2>How to fill the reels</h2>
+  <div class="grid">
+    <div class="fld"><label for="mode">Strategy</label>
+      <select id="mode">
+        <option value="ffd">Fewest reels</option>
+        <option value="group">Keep each area on its own reels</option>
+        <option value="seq">Takeoff order</option>
+      </select><small id="modeNote"></small></div>
+    <div class="fld"><label for="hold">Hold back per reel (ft)</label>
+      <input id="hold" class="num" type="number" value="0" min="0"><small>Margin left on every reel.</small></div>
+    <div class="fld"><label for="waste">Cut waste per pull (ft)</label>
+      <input id="waste" class="num" type="number" value="0" min="0"><small>Added to every pull.</small></div>
+  </div>
+  <div class="row"><button id="run">Build order sheet</button><span id="runWhy" class="reel-meta"></span></div>
+</section>
+
+<section id="out" class="hidden"></section>
+<section id="outfoot" class="hidden noprint"><div class="row" style="margin-top:0">
+  <button id="dlPull">Download pull sheet (CSV)</button>
+  <button id="dlReel" class="ghost">Download reel order (CSV)</button>
+  <button id="print" class="ghost">Print</button>
+</div></section>
+</div>
+
+<script>
+"use strict";
+var S={rows:[],headers:[],map:{},idCols:[],key:{},loc:{},rules:[],drop:{},merge:{},result:null,ack:{}};
+
+/* Recognized fields. Everything not listed still rides along to the pull sheet. */
+var FIELDS={
+  length:{label:"Run length",req:true,alias:["conduit length","wire length","measurement","length","run length","meas","dimension","footage","lf","linear feet","total length"]},
+  designation:{label:"Designation",alias:["designation","desig","cable type","cable","wire type","type","tag"]},
+  start:{label:"Start location",alias:["start location","start","from","origin","source panel","panel"]},
+  end:{label:"End location",alias:["end location","end","to","destination","load"]},
+  adjust:{label:"Length adjustment",alias:["length adjustment","length adj","adjustment","adder","extra wire"]},
+  area:{label:"Area / cell",alias:["cell","area","circuits","layer","zone","room","level","building"]},
+  wire:{label:"Wire size",alias:["wire size","conductor size","size","awg"]},
+  ground:{label:"Ground size",alias:["ground size","ground","egc","ground_size"]},
+  volts:{label:"Voltage",alias:["voltage","volts","system voltage"]},
+  ctype:{label:"Conduit type",alias:["conduit type","raceway type","raceway"]},
+  csize:{label:"Conduit size",alias:["conduit size","raceway size","trade size"]},
+  equip:{label:"Equipment",alias:["equipment","equipment name","gear","device","subject","item","category","description"]},
+  notes:{label:"Notes",alias:["additional notes","notes","comments","remarks"]}
+};
+/* Columns offered as cable-identity candidates, in preference order */
+var ID_CANDIDATES=["designation","wire","ground","volts","ctype","csize","area","equip"];
+var DEFAULT_RULES=[["XFM",20],["MSB",15],["UDS",15],["ADP",20],["ATS",30],["PNL",10],["UPS",15],["BSW",5]];
+var PALETTE=["#8A5A1E","#7A3E80","#26527A","#3D6B4A","#8C2C1A","#4A4E7A","#7A6A2A","#2E6B70"];
+
+function $(i){return document.getElementById(i);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function f1(n){return (Math.round(n*10)/10).toFixed(1);}
+function fc(n){return f1(n).replace(/\B(?=(\d{3})+(?!\d))/g,",");}
+function norm(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
+function squash(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
+function med(a){if(!a.length)return 0;var b=a.slice().sort(function(x,y){return x-y;});
+  var m=Math.floor(b.length/2);return b.length%2?b[m]:(b[m-1]+b[m])/2;}
+
+/* Lenient CSV. A double quote only opens a quoted field at the START of a
+   field, and only closes one when the next character ends the field. That
+   makes bare inch marks -- 2", 142'-6" -- survive instead of swallowing the
+   rest of the line, which is the single most common way these exports break. */
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");
+  var rows=[],row=[],cur="",q=false,i=0,started=false;
+  while(i<t.length){var c=t[i];
+    if(q){
+      if(c==='"'){
+        if(t[i+1]==='"'){cur+='"';i+=2;continue;}
+        var nx=t[i+1];
+        if(nx===undefined||nx===","||nx==="\n"||nx==="\r"){q=false;i++;continue;}
+        cur+='"';i++;continue;                       // stray quote inside -- keep it
+      }
+      cur+=c;i++;continue;
+    }
+    if(c==='"'&&!started){q=true;started=true;i++;continue;}
+    if(c===","){row.push(cur);cur="";started=false;i++;continue;}
+    if(c==="\r"){i++;continue;}
+    if(c==="\n"){row.push(cur);rows.push(row);row=[];cur="";started=false;i++;continue;}
+    cur+=c;started=true;i++;}
+  row.push(cur);rows.push(row);
+  return rows.filter(function(r){return r.some(function(v){return String(v).trim()!=="";});});
+}
+function parseLen(v){
+  if(v==null)return null;
+  if(typeof v==="number")return isFinite(v)?v:null;
+  var s=String(v).trim(); if(!s)return null;
+  if(/^(na|n\/a|none|-|tbd)$/i.test(s))return null;
+  s=s.replace(/,/g,"");
+  var m=s.match(/^(-?\d+(?:\.\d+)?)\s*['\u2032]\s*[-\s]?\s*(?:(\d+(?:\.\d+)?)\s*["\u2033])?$/);
+  if(m)return parseFloat(m[1])+(m[2]?parseFloat(m[2])/12:0);
+  m=s.match(/^(-?\d+(?:\.\d+)?)\s*(?:ft|feet|lf)?$/i);
+  if(m)return parseFloat(m[1]);
+  m=s.match(/-?\d+(?:\.\d+)?/);
+  return m?parseFloat(m[0]):null;
+}
+/* Score every (field, column) pair, then assign the strongest matches first.
+   Assigning field-by-field in declaration order lets an early field with a
+   weak match steal a column that a later field matches exactly -- which is
+   how "Conduit Type" ends up being read as the designation. */
+function scoreHeader(header,alias,rank){
+  var n=norm(header),t=alias;
+  if(!n)return 0;
+  if(n===t)return 200-rank;
+  if(n.indexOf(t)===0||t.indexOf(n)===0)return 140-rank;
+  if(t.length>=4&&(" "+n+" ").indexOf(" "+t+" ")>-1)return 90-rank;   // whole words
+  if(t.length>=6&&n.indexOf(t)>-1)return 60-rank;
+  return 0;
+}
+function autoMap(h){
+  var pairs=[];
+  Object.keys(FIELDS).forEach(function(k){
+    FIELDS[k].alias.forEach(function(t,rank){
+      h.forEach(function(x,i){
+        var sc=scoreHeader(x,t,rank);
+        if(sc>0)pairs.push({f:k,c:i,s:sc});
+      });
+    });
+  });
+  pairs.sort(function(a,b){return b.s-a.s;});
+  var map={},usedF={},usedC={};
+  pairs.forEach(function(p){
+    if(usedF[p.f]||usedC[p.c])return;
+    map[p.f]=p.c;usedF[p.f]=1;usedC[p.c]=1;
+  });
+  return map;
+}
+
+/* If no header looked like a length, find the column that reads like one:
+   mostly parseable, mostly positive, and not obviously a page or ID number.
+   Header names vary too much between shops to enumerate them all. */
+function guessLengthCol(map){
+  var best=-1,bestScore=0,taken={};
+  Object.keys(map).forEach(function(k){taken[map[k]]=1;});
+  S.headers.forEach(function(h,c){
+    if(taken[c])return;
+    var vals=[],hits=0;
+    S.rows.forEach(function(r){
+      var v=String(r[c]==null?"":r[c]).trim();
+      if(!v)return;
+      var n=parseLen(v);
+      if(n!=null&&n>0){hits++;vals.push(n);}
+    });
+    if(vals.length<Math.max(2,S.rows.length*0.5))return;
+    var m=med(vals);
+    if(m<3||m>100000)return;                       // page numbers, flags, prices
+    var feetish=0;
+    S.rows.forEach(function(r){if(/['\u2032"]/.test(String(r[c]||"")))feetish++;});
+    var sc=hits/S.rows.length*100+Math.min(30,m/10)+(feetish?40:0);
+    if(sc>bestScore){bestScore=sc;best=c;}
+  });
+  return best;
+}
+function csv(rows){return rows.map(function(r){return r.map(function(c){
+  c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(",");}).join("\r\n");}
+function dl(n,t){var b=new Blob([t],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(b);
+  var a=document.createElement("a");a.href=u;a.download=n;a.click();
+  setTimeout(function(){URL.revokeObjectURL(u);},1500);}
+function pick(h,names){for(var i=0;i<h.length;i++){var n=norm(h[i]);
+  for(var j=0;j<names.length;j++)if(n===names[j]||n.indexOf(names[j])===0)return i;}return -1;}
+function readFile(inp,fn){var f=inp.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(){fn(r.result,f.name);};r.readAsText(f);inp.value="";}
+
+/* ================= ingest ================= */
+function ingest(text,name){
+  var rows=parseCSV(text);
+  if(rows.length<2){alert("No data rows in that file.");return;}
+  S.headers=rows[0].map(function(h){return String(h).trim();});
+  S.rows=rows.slice(1);
+  S.map=autoMap(S.headers);
+  S.guessedLength=false;
+  if(S.map.length==null){
+    var g=guessLengthCol(S.map);
+    if(g>-1){S.map.length=g;S.guessedLength=true;}
+  }
+  S.drop={};S.merge={};S.ack={};
+  if(!S.rules.length)S.rules=DEFAULT_RULES.map(function(r){return {kw:r[0],ft:r[1]};});
+  S.idCols=defaultIdCols();
+  $("fileinfo").textContent=(name?name+" — ":"")+S.rows.length+" rows, "+S.headers.length+" columns";
+  ["s2","s3","s4","s5","s6"].forEach(function(i){$(i).classList.remove("hidden");});
+  drawMaps();refresh();
+  $("s2").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function colFilled(k){
+  if(S.map[k]==null)return 0;
+  var c=S.map[k],n=0;
+  S.rows.forEach(function(r){if(String(r[c]||"").trim())n++;});
+  return n/Math.max(1,S.rows.length);
+}
+function defaultIdCols(){
+  if(colFilled("designation")>0.6)return ["designation"];
+  var out=[];
+  if(colFilled("wire")>0.3)out.push("wire");
+  if(colFilled("ground")>0.3)out.push("ground");
+  if(!out.length&&colFilled("volts")>0.3)out.push("volts");
+  if(!out.length&&S.map.designation!=null)out.push("designation");
+  return out;
+}
+function drawMaps(){
+  $("maps").innerHTML=Object.keys(FIELDS).map(function(k){
+    var f=FIELDS[k],sel=S.map[k];
+    var opts='<option value="-1">— not used —</option>'+S.headers.map(function(h,i){
+      return '<option value="'+i+'"'+(sel===i?" selected":"")+">"+esc(h||("Column "+(i+1)))+"</option>";}).join("");
+    var st=sel!=null&&sel>-1?'<span class="found">matched</span>':(f.req?'<span class="miss">required</span>':"optional");
+    return '<div class="map"><label>'+esc(f.label)+" &middot; "+st+'</label><select data-fld="'+k+'">'+opts+"</select></div>";
+  }).join("");
+  Array.prototype.forEach.call($("maps").querySelectorAll("select"),function(s){
+    s.onchange=function(){var v=parseInt(s.value,10);
+      if(v<0)delete S.map[s.dataset.fld]; else S.map[s.dataset.fld]=v;
+      S.idCols=S.idCols.filter(function(c){return S.map[c]!=null;});
+      if(!S.idCols.length)S.idCols=defaultIdCols();
+      drawMaps();refresh();};
+  });
+  $("idchips").innerHTML=ID_CANDIDATES.filter(function(k){return S.map[k]!=null;}).map(function(k){
+    return '<div class="chip'+(S.idCols.indexOf(k)>-1?" on":"")+'" data-id="'+k+'">'+esc(FIELDS[k].label)+"</div>";
+  }).join("")||'<span class="reel-meta">No usable columns — everything will be treated as one cable.</span>';
+  Array.prototype.forEach.call($("idchips").querySelectorAll("[data-id]"),function(c){
+    c.onclick=function(){var k=c.dataset.id,i=S.idCols.indexOf(k);
+      if(i>-1)S.idCols.splice(i,1); else S.idCols.push(k);
+      drawMaps();refresh();};
+  });
+}
+
+/* ================= records ================= */
+function cell(r,k){var i=S.map[k];return i==null?"":String(r[i]==null?"":r[i]).trim();}
+function cableOf(r){
+  var parts=S.idCols.map(function(k){return cell(r,k);}).filter(function(v){return v!=="";});
+  var name=parts.join(" / ").toUpperCase();
+  if(!name)name="(UNSPECIFIED)";
+  return S.merge[name]||name;
+}
+function records(){
+  if(S.map.length==null)return {ok:[],noLen:[],noCable:[]};
+  var ok=[],noLen=[],noCable=[];
+  S.rows.forEach(function(r,i){
+    if(S.drop[i])return;
+    var L=parseLen(r[S.map.length]);
+    var cb=cableOf(r);
+    var rec={i:i,row:r,cable:cb,len:L,
+      start:cell(r,"start"),end:cell(r,"end"),area:cell(r,"area"),
+      adj:parseLen(cell(r,"adjust"))||0,
+      raw:{}};
+    Object.keys(FIELDS).forEach(function(k){rec.raw[k]=cell(r,k);});
+    if(L==null||L<=0){noLen.push(rec);return;}
+    if(cb==="(UNSPECIFIED)")noCable.push(rec);
+    ok.push(rec);
+  });
+  return {ok:ok,noLen:noLen,noCable:noCable};
+}
+function cables(){var s={};records().ok.forEach(function(r){s[r.cable]=1;});return Object.keys(s).sort();}
+
+function refresh(){
+  var cbs=cables();
+  cbs.forEach(function(c){
+    if(!S.key[c])S.key[c]={par:1,reel:null,colors:"",note:"",assumedPar:true,assumedReel:true};
+  });
+  var recs=records(),locs={};
+  recs.ok.forEach(function(r){if(r.start)locs[r.start]=1;if(r.end)locs[r.end]=1;});
+  Object.keys(locs).forEach(function(l){if(S.loc[l]==null)S.loc[l]=null;});
+  Object.keys(S.loc).forEach(function(l){if(!locs[l])delete S.loc[l];});
+  drawKey();drawRules();drawLoc();drawIssues();
+}
+
+/* ================= issues ================= */
+/* Only case, spacing and punctuation count as noise. A different letter or
+   digit is a different cable -- R3A-TC and U3A-TC must never be merged. */
+function similar(a,b){return squash(a)===squash(b);}
+function buildIssues(){
+  var out=[],R=records(),cbs=cables();
+  var defReel=parseLen($("defReel").value)||500;
+
+  if(S.guessedLength&&S.map.length!=null&&!S.ack["guesslen"]){
+    var gl=R.ok.map(function(r){return r.len;});
+    out.push({lv:"ask",id:"guesslen",
+      t:"Using \u201c"+S.headers[S.map.length]+"\u201d as the run length \u2014 is that right?",
+      d:"No column was named anything obvious, so this one was picked because it reads like footage. Typical value is "+
+        f1(med(gl))+" ft. Change it in step 2 if it's the wrong column.",
+      act:[{k:"ack",label:"That's the one"},{k:"goto",to:"s2",label:"Pick a different column"}]});
+  }
+  if(S.map.length==null)
+    out.push({lv:"stop",id:"nolencol",t:"No length column picked",
+      d:"Nothing can be spooled without one. Pick it in step 2."});
+  else if(!R.ok.length)
+    out.push({lv:"stop",id:"norows",t:"No rows have a usable length",
+      d:"The length column is mapped but every value came back blank or non-numeric. It may be the wrong column."});
+
+  if(R.noLen.length)
+    out.push({lv:"ask",id:"nolen",t:R.noLen.length+" row"+(R.noLen.length>1?"s have":" has")+" no length",
+      d:"These are excluded from the count already. Common for header rows, box takeoffs, or runs still being measured.",
+      ex:R.noLen.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+(r.cable||"?")+"  "+(r.start||"?")+"\u2192"+(r.end||"?");}),
+      act:[{k:"ack",label:"That's expected"}]});
+
+  if(R.noCable.length)
+    out.push({lv:"ask",id:"nocable",t:R.noCable.length+" row"+(R.noCable.length>1?"s don't":" doesn't")+" say what cable it is",
+      d:"They're grouped together as (UNSPECIFIED) and will be spooled as one cable. If your takeoff identifies cable a different way, change the picks in step 2.",
+      ex:R.noCable.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+(r.start||"?")+"\u2192"+(r.end||"?")+"  "+f1(r.len)+" ft";})});
+
+  /* near-duplicate cable names */
+  for(var a=0;a<cbs.length;a++)for(var b=a+1;b<cbs.length;b++){
+    if(similar(cbs[a],cbs[b])&&cbs[a]!==cbs[b]){
+      out.push({lv:"ask",id:"merge:"+cbs[a]+"|"+cbs[b],
+        t:"\u201c"+cbs[a]+"\u201d and \u201c"+cbs[b]+"\u201d might be the same cable",
+        d:"Spelled differently in the takeoff, so right now they get separate reels.",
+        act:[{k:"merge",from:cbs[b],to:cbs[a],label:"Same \u2014 use "+cbs[a]},
+             {k:"merge",from:cbs[a],to:cbs[b],label:"Same \u2014 use "+cbs[b]},
+             {k:"ack",label:"Different cables"}]});
+    }
+  }
+
+  /* reel length not set */
+  var needReel=cbs.filter(function(c){return !S.key[c].reel;});
+  if(needReel.length)
+    out.push({lv:"ask",id:"reel",t:"Reel length not set for "+needReel.length+" cable"+(needReel.length>1?"s":""),
+      d:"Assuming "+f1(defReel)+" ft for: "+needReel.join(", ")+". This is the one number that decides how many reels you order, so it's worth a second.",
+      act:[{k:"reelall",label:"Use "+f1(defReel)+" ft for all"},{k:"goto",to:"s4",label:"Set them individually"}]});
+
+  /* parallels assumed */
+  var assumedPar=cbs.filter(function(c){return S.key[c].assumedPar;});
+  if(assumedPar.length&&!S.ack["par"])
+    out.push({lv:"ask",id:"par",t:"Every cable assumed 1 conductor set per run",
+      d:"If any of these are parallel feeders, each run needs that many separate pulls off the reel. Set it in step 4.",
+      act:[{k:"ack",label:"All single sets"},{k:"goto",to:"s4",label:"Some are parallel"}]});
+
+  /* oversize pulls */
+  var over=[];
+  R.ok.forEach(function(r){
+    var k=S.key[r.cable],cap=k&&k.reel?k.reel:defReel;
+    var L=r.len+(S.loc[r.start]||0)+(S.loc[r.end]||0)+r.adj;
+    if(L>cap)over.push({r:r,L:L,cap:cap});
+  });
+  if(over.length){
+    var byC={};over.forEach(function(o){(byC[o.r.cable]=byC[o.r.cable]||[]).push(o);});
+    Object.keys(byC).forEach(function(c){
+      var longest=Math.max.apply(null,byC[c].map(function(o){return o.L;}));
+      out.push({lv:"ask",id:"over:"+c,
+        t:byC[c].length+" "+c+" pull"+(byC[c].length>1?"s are":" is")+" longer than the reel",
+        d:"Longest is "+f1(longest)+" ft on a "+f1(byC[c][0].cap)+" ft reel. Needs a bigger put-up, a splice, or a different route.",
+        ex:byC[c].slice(0,4).map(function(o){return (o.r.start||"?")+"\u2192"+(o.r.end||"?")+"  "+f1(o.L)+" ft";}),
+        act:[{k:"bump",cable:c,to:Math.ceil(longest/50)*50,label:"Order "+c+" on "+Math.ceil(longest/50)*50+" ft reels"},
+             {k:"ack",label:"They'll be spliced"}]});
+    });
+  }
+
+  /* outliers */
+  cbs.forEach(function(c){
+    var ls=R.ok.filter(function(r){return r.cable===c;}).map(function(r){return r.len;});
+    if(ls.length<4)return;
+    var m=med(ls);if(m<=0)return;
+    var odd=R.ok.filter(function(r){return r.cable===c&&(r.len>m*8||r.len<m/12);});
+    if(odd.length&&odd.length<ls.length/3)
+      out.push({lv:"note",id:"outlier:"+c,t:odd.length+" "+c+" run"+(odd.length>1?"s look":" looks")+" out of scale",
+        d:"Typical "+c+" run is about "+f1(m)+" ft. Usually a scale set wrong in the takeoff, or feet typed where inches were meant.",
+        ex:odd.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+(r.start||"?")+"\u2192"+(r.end||"?")+"  "+f1(r.len)+" ft";})});
+  });
+
+  /* duplicates */
+  var seen={},dups=[];
+  R.ok.forEach(function(r){
+    var k=r.cable+"|"+r.start+"|"+r.end+"|"+f1(r.len);
+    if(seen[k])dups.push(r); else seen[k]=1;});
+  if(dups.length&&!S.ack["dup"])
+    out.push({lv:"note",id:"dup",t:dups.length+" run"+(dups.length>1?"s are":" is")+" an exact repeat",
+      d:"Same cable, same two ends, same length. Legitimate for parallel raceways, but also what a double-click in Bluebeam looks like.",
+      ex:dups.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+r.cable+"  "+(r.start||"?")+"\u2192"+(r.end||"?")+"  "+f1(r.len)+" ft";}),
+      act:[{k:"ack",label:"They're real"},{k:"dropdup",label:"Remove the repeats"}]});
+
+  /* same start and end */
+  var same=R.ok.filter(function(r){return r.start&&r.end&&norm(r.start)===norm(r.end);});
+  if(same.length)
+    out.push({lv:"note",id:"same",t:same.length+" run"+(same.length>1?"s start":" starts")+" and end at the same place",
+      d:"Its termination allowance gets counted twice. Usually a copied row that didn't get updated.",
+      ex:same.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+r.start;})});
+
+  /* missing allowances */
+  var ml=Object.keys(S.loc).filter(function(l){return S.loc[l]==null;});
+  if(ml.length)
+    out.push({lv:"ask",id:"loc",t:ml.length+" location"+(ml.length>1?"s have":" has")+" no extra wire set",
+      d:"They'll count as zero, so those pulls come out short by whatever it takes to land and terminate.",
+      ex:ml.slice(0,6),
+      act:[{k:"rules",label:"Apply keyword rules"},{k:"goto",to:"s5",label:"Set them by hand"}]});
+
+  /* unparseable adjustments */
+  if(S.map.adjust!=null){
+    var badAdj=R.ok.filter(function(r){
+      var v=r.raw.adjust;return v&&parseLen(v)==null;});
+    if(badAdj.length)
+      out.push({lv:"note",id:"adj",t:badAdj.length+" length adjustment"+(badAdj.length>1?"s":"")+" couldn't be read as a number",
+        d:"Treated as zero.",ex:badAdj.slice(0,4).map(function(r){return "row "+(r.i+2)+'  "'+r.raw.adjust+'"';})});
+  }
+
+  return out.filter(function(x){return !S.ack[x.id];});
+}
+
+function drawIssues(){
+  var iss=buildIssues();
+  var stop=iss.filter(function(x){return x.lv==="stop";}).length;
+  var ask=iss.filter(function(x){return x.lv==="ask";}).length;
+  $("s3step").className="step"+(stop?" hot":"");
+  $("run").disabled=stop>0;
+  $("runWhy").textContent=stop?"Fix the blocking item in step 3 first.":"";
+  if(!iss.length){
+    $("issues").innerHTML='<div class="iss clean"><h6>Nothing looks wrong.</h6>'+
+      '<p>'+records().ok.length+" runs read cleanly across "+cables().length+" cable"+(cables().length>1?"s":"")+".</p></div>";
+    return;
+  }
+  $("issues").innerHTML=iss.map(function(x,n){
+    return '<div class="iss '+x.lv+'"><h6>'+esc(x.t)+"</h6><p>"+esc(x.d)+"</p>"+
+      (x.ex&&x.ex.length?'<div class="ex">'+x.ex.map(esc).join("<br>")+"</div>":"")+
+      (x.act?'<div class="act">'+x.act.map(function(a,ai){
+        return '<button class="ghost sm" data-iss="'+n+'" data-act="'+ai+'">'+esc(a.label)+"</button>";}).join("")+"</div>":"")+
+      "</div>";
+  }).join("");
+  Array.prototype.forEach.call($("issues").querySelectorAll("[data-iss]"),function(b){
+    b.onclick=function(){doAct(iss[+b.dataset.iss],iss[+b.dataset.iss].act[+b.dataset.act]);};
+  });
+}
+function doAct(iss,a){
+  if(a.k==="ack")S.ack[iss.id]=1;
+  else if(a.k==="merge"){S.merge[a.from]=a.to;delete S.key[a.from];}
+  else if(a.k==="reelall"){var v=parseLen($("defReel").value)||500;
+    cables().forEach(function(c){if(!S.key[c].reel){S.key[c].reel=v;S.key[c].assumedReel=false;}});}
+  else if(a.k==="bump"){S.key[a.cable].reel=a.to;S.key[a.cable].assumedReel=false;}
+  else if(a.k==="rules")applyRules();
+  else if(a.k==="dropdup"){
+    var seen={};records().ok.forEach(function(r){
+      var k=r.cable+"|"+r.start+"|"+r.end+"|"+f1(r.len);
+      if(seen[k])S.drop[r.i]=1; else seen[k]=1;});}
+  else if(a.k==="goto"){$(a.to).scrollIntoView({behavior:"smooth",block:"start"});return;}
+  refresh();
+}
+
+/* ================= cables table ================= */
+function drawKey(){
+  var cbs=cables();
+  if(!cbs.length){$("keytbl").innerHTML="";return;}
+  var counts={};records().ok.forEach(function(r){counts[r.cable]=(counts[r.cable]||0)+1;});
+  $("keytbl").innerHTML='<thead><tr><th>Cable</th><th style="width:64px">Runs</th>'+
+    '<th style="width:88px">Sets per run</th><th style="width:112px">Reel ft</th>'+
+    '<th>Colors (free text)</th><th>Note</th></tr></thead><tbody>'+
+    cbs.map(function(c){var v=S.key[c];
+      return "<tr><td><b>"+esc(c)+"</b></td>"+
+        '<td class="num">'+(counts[c]||0)+"</td>"+
+        '<td><input class="num" type="number" min="1" step="1" data-c="'+esc(c)+'" data-p="par" value="'+v.par+'"></td>'+
+        '<td><input class="num" list="putups" data-c="'+esc(c)+'" data-p="reel" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"></td>'+
+        '<td><input data-c="'+esc(c)+'" data-p="colors" value="'+esc(v.colors)+'" placeholder="e.g. brown, orange, yellow"></td>'+
+        '<td><input data-c="'+esc(c)+'" data-p="note" value="'+esc(v.note)+'" placeholder="connector, label, anything"></td></tr>';
+    }).join("")+"</tbody>";
+  Array.prototype.forEach.call($("keytbl").querySelectorAll("[data-c]"),function(el){
+    el.onchange=function(){var o=S.key[el.dataset.c],p=el.dataset.p;
+      if(p==="par"){var n=parseFloat(el.value);o.par=(isFinite(n)&&n>0)?Math.round(n):1;o.assumedPar=false;}
+      else if(p==="reel"){var m=parseLen(el.value);o.reel=(m&&m>0)?m:null;o.assumedReel=!o.reel;}
+      else o[p]=el.value;
+      refresh();};
+  });
+}
+function keyCSV(){
+  var rows=[["Cable","Sets per run","Reel length ft","Colors","Note"]];
+  Object.keys(S.key).sort().forEach(function(c){var v=S.key[c];
+    rows.push([c,v.par,v.reel==null?"":v.reel,v.colors,v.note]);});
+  return csv(rows);
+}
+function loadKeyCSV(t){
+  var rows=parseCSV(t);if(rows.length<2)return;
+  var h=rows[0],iN=pick(h,["cable","designation","cable type","desig","type"]),
+      iP=pick(h,["sets per run","parallels","parallel","sets"]),
+      iR=pick(h,["reel length ft","reel length","reel ft","reel","spool length","put up"]),
+      iC=pick(h,["colors","conductor colors","color","phases"]),
+      iT=pick(h,["note","notes","label","connector"]);
+  if(iN<0){alert('That file needs a column named "Cable" or "Designation".');return;}
+  var n=0;
+  rows.slice(1).forEach(function(r){
+    var k=String(r[iN]||"").trim().toUpperCase();if(!k)return;
+    var p=iP>-1?parseFloat(r[iP]):NaN,rl=iR>-1?parseLen(r[iR]):null;
+    S.key[k]={par:isFinite(p)&&p>0?Math.round(p):1,reel:rl&&rl>0?rl:null,
+      colors:iC>-1?String(r[iC]||"").trim():"",note:iT>-1?String(r[iT]||"").trim():"",
+      assumedPar:!(isFinite(p)&&p>0),assumedReel:!(rl&&rl>0)};
+    n++;});
+  refresh();alert("Loaded "+n+" cables.");
+}
+
+/* ================= terminations ================= */
+function drawRules(){
+  $("ruletbl").innerHTML='<thead><tr><th>If the location contains…</th><th style="width:120px">Extra wire ft</th><th style="width:44px"></th></tr></thead><tbody>'+
+    S.rules.map(function(r,i){
+      return '<tr><td><input data-r="'+i+'" data-p="kw" value="'+esc(r.kw)+'"></td>'+
+        '<td><input class="num" type="number" min="0" data-r="'+i+'" data-p="ft" value="'+r.ft+'"></td>'+
+        '<td><button class="ghost sm" data-rd="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
+  Array.prototype.forEach.call($("ruletbl").querySelectorAll("[data-r]"),function(el){
+    el.onchange=function(){var r=S.rules[+el.dataset.r];
+      if(el.dataset.p==="ft")r.ft=parseFloat(el.value)||0;else r.kw=el.value;};});
+  Array.prototype.forEach.call($("ruletbl").querySelectorAll("[data-rd]"),function(b){
+    b.onclick=function(){S.rules.splice(+b.dataset.rd,1);drawRules();};});
+}
+function applyRules(){
+  var d=parseFloat($("defExtra").value);if(!isFinite(d))d=0;
+  Object.keys(S.loc).forEach(function(l){
+    var v=d,n=norm(l);
+    S.rules.forEach(function(r){if(r.kw&&n.indexOf(norm(r.kw))>-1)v=r.ft;});
+    S.loc[l]=v;});
+  drawLoc();drawIssues();
+}
+function drawLoc(){
+  var ls=Object.keys(S.loc).sort();
+  if(!ls.length){$("loctbl").innerHTML="";return;}
+  $("loctbl").innerHTML='<thead><tr><th>Location</th><th style="width:140px">Extra wire ft</th></tr></thead><tbody>'+
+    ls.map(function(l){var v=S.loc[l];
+      return "<tr><td>"+esc(l)+'</td><td><input class="num" type="number" min="0" step="1" data-loc="'+esc(l)+
+        '" value="'+(v==null?"":v)+'" placeholder="not set"></td></tr>';}).join("")+"</tbody>";
+  Array.prototype.forEach.call($("loctbl").querySelectorAll("[data-loc]"),function(el){
+    el.onchange=function(){var n=parseFloat(el.value);
+      S.loc[el.dataset.loc]=isFinite(n)&&n>=0?n:null;drawLoc();drawIssues();};});
+}
+function locCSV(){var rows=[["Location","Extra wire ft"]];
+  Object.keys(S.loc).sort().forEach(function(l){rows.push([l,S.loc[l]==null?"":S.loc[l]]);});return csv(rows);}
+function loadLocCSV(t){
+  var rows=parseCSV(t);if(rows.length<2)return;
+  var h=rows[0],iL=pick(h,["location","name","point","gear","equipment"]),
+      iF=pick(h,["extra wire ft","extra wire","extra","allowance","ft","feet"]);
+  if(iL<0||iF<0){alert('That file needs "Location" and "Extra wire ft" columns.');return;}
+  var n=0;
+  rows.slice(1).forEach(function(r){var k=String(r[iL]||"").trim();if(!k)return;
+    var v=parseLen(r[iF]);if(v==null)return;S.loc[k]=v;n++;});
+  drawLoc();drawIssues();alert("Loaded "+n+" allowances.");
+}
+
+/* ================= pack ================= */
+function buildPulls(){
+  var waste=parseFloat($("waste").value)||0,defReel=parseLen($("defReel").value)||500,out=[];
+  records().ok.forEach(function(r){
+    var k=S.key[r.cable]||{par:1,reel:null};
+    var par=Math.max(1,Math.round(k.par||1));
+    var sA=S.loc[r.start]||0,eA=S.loc[r.end]||0,ex=sA+eA+r.adj;
+    var each=r.len+ex+waste;
+    for(var p=1;p<=par;p++)
+      out.push({cable:r.cable,len:each,base:r.len,sA:sA,eA:eA,area:r.area,
+        start:r.start,end:r.end,par:p,ofpar:par,raw:r.raw,src:r.i+2,row:r.row,
+        cap:k.reel||defReel});
+  });
+  return out;
+}
+function pack(items,cap,mode){
+  var bins=[],over=[],list=items.slice();
+  if(mode!=="seq")list.sort(function(a,b){return b.len-a.len;});
+  list.forEach(function(it){
+    if(it.len>cap){over.push(it);return;}
+    if(mode==="seq"){
+      var last=bins[bins.length-1];
+      if(last&&last.used+it.len<=cap+1e-9){last.items.push(it);last.used+=it.len;}
+      else bins.push({items:[it],used:it.len});
+      return;}
+    for(var i=0;i<bins.length;i++)
+      if(bins[i].used+it.len<=cap+1e-9){bins[i].items.push(it);bins[i].used+=it.len;return;}
+    bins.push({items:[it],used:it.len});});
+  return {bins:bins,over:over};
+}
+function run(){
+  var pulls=buildPulls();
+  if(!pulls.length){alert("No usable rows.");return;}
+  var mode=$("mode").value,hold=parseFloat($("hold").value)||0;
+  var byC={};pulls.forEach(function(p){(byC[p.cable]=byC[p.cable]||[]).push(p);});
+  var res={cables:[],over:[],totPulls:pulls.length,totFt:0,totReels:0,naive:0};
+  Object.keys(byC).sort().forEach(function(c,ci){
+    var items=byC[c],capFull=items[0].cap,cap=Math.max(1,capFull-hold);
+    var ft=items.reduce(function(a,b){return a+b.len;},0);
+    res.totFt+=ft;res.naive+=Math.ceil(ft/capFull);
+    var reels=[];
+    if(mode==="group"){
+      var byA={};items.forEach(function(p){var a=p.area||"(no area)";(byA[a]=byA[a]||[]).push(p);});
+      Object.keys(byA).sort().forEach(function(a){
+        var r=pack(byA[a],cap,"ffd");
+        r.bins.forEach(function(b){b.area=a;reels.push(b);});
+        r.over.forEach(function(o){res.over.push(o);});});
+    }else{
+      var r2=pack(items,cap,mode);
+      r2.bins.forEach(function(b){reels.push(b);});
+      r2.over.forEach(function(o){res.over.push(o);});}
+    reels.forEach(function(b,i){b.id=c.replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"")+
+      "-R"+String(i+1).padStart(2,"0");b.cap=capFull;b.tail=capFull-b.used;});
+    res.totReels+=reels.length;
+    res.cables.push({c:c,key:S.key[c]||{par:1},reels:reels,ft:ft,pulls:items.length,
+      cap:capFull,color:PALETTE[ci%PALETTE.length],
+      colors:(S.key[c]&&S.key[c].colors)||""});
+  });
+  S.result=res;render(res);
+}
+function render(res){
+  var o=$("out"),h='<div class="step">Order sheet</div><h2>Reel order</h2>';
+  h+='<div class="stats">'+
+    '<div class="stat"><b>'+res.totReels+'</b><span>Reels to order</span></div>'+
+    '<div class="stat"><b>'+fc(res.totFt)+'</b><span>Total feet</span></div>'+
+    '<div class="stat"><b>'+res.totPulls+'</b><span>Individual pulls</span></div>'+
+    '<div class="stat'+(res.over.length?" bad":"")+'"><b>'+res.over.length+'</b><span>Won\u2019t fit a reel</span></div></div>';
+  var diff=res.totReels-res.naive;
+  if(diff>0)h+='<div class="iss stop"><h6>'+diff+" more reel"+(diff>1?"s":"")+
+    " than total feet \u00f7 reel length</h6><p>A pull can\u2019t be spliced across two reels, so a footage total always under-counts.</p></div>";
+
+  /* group by color string when given, otherwise one group */
+  var groups={};
+  res.cables.forEach(function(x){var g=x.colors||"Colors not set";(groups[g]=groups[g]||[]).push(x);});
+  Object.keys(groups).sort().forEach(function(g){
+    var ds=groups[g];
+    var reels=ds.reduce(function(a,b){return a+b.reels.length;},0);
+    var ft=ds.reduce(function(a,b){return a+b.ft;},0);
+    h+='<div class="grp"><h3>'+esc(g)+'</h3><div class="tot">'+reels+" reels &middot; "+fc(ft)+" ft</div></div>";
+    ds.forEach(function(x){
+      h+='<div class="desig"><div class="desig-hd"><h4>'+esc(x.c)+'</h4><div class="lbl">'+
+        (x.key.note?esc(x.key.note)+" &middot; ":"")+x.key.par+" set"+(x.key.par>1?"s":"")+
+        "/run &middot; "+f1(x.cap)+" ft reels &middot; "+x.pulls+" pulls</div></div>";
+      x.reels.forEach(function(b){
+        h+='<div class="reel"><div class="reel-hd"><div class="reel-id">'+esc(b.id)+
+          (b.area?' <span class="reel-meta">'+esc(b.area)+"</span>":"")+'</div><div class="reel-meta">'+
+          f1(b.used)+" / "+f1(b.cap)+" ft &middot; "+f1(b.tail)+" ft tail &middot; "+
+          Math.round(b.used/b.cap*100)+"%</div></div>";
+        h+='<div class="bar">'+b.items.map(function(p,i){var w=p.len/b.cap*100;
+          return '<div class="seg" style="width:'+w+"%;background:"+x.color+";opacity:"+(i%2?.82:1)+
+            '" title="'+esc(p.start+" \u2192 "+p.end)+" "+f1(p.len)+' ft">'+(w>9?f1(p.len):"")+"</div>";
+        }).join("")+"</div>";
+        h+='<div class="reel-pulls">'+b.items.map(function(p){
+          return "<span>"+esc(p.start||"?")+"\u2192"+esc(p.end||"?")+
+            (p.ofpar>1?" ("+p.par+"/"+p.ofpar+")":"")+" <b>"+f1(p.len)+"</b></span>";}).join("")+"</div></div>";
+      });
+      h+="</div>";});
+  });
+  o.innerHTML=h;o.classList.remove("hidden");
+  $("outfoot").classList.remove("hidden");
+  o.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* pull sheet keeps every original column, plus the reel assignment */
+function pullCSV(){
+  var res=S.result;
+  var head=["Reel ID","Cable","Set","Start allow ft","End allow ft","Cut length ft","Reel ft","Source row"]
+    .concat(S.headers);
+  var rows=[head];
+  function line(id,p,cap){
+    return [id,p.cable,p.ofpar>1?p.par+" of "+p.ofpar:"1",f1(p.sA),f1(p.eA),f1(p.len),f1(cap),p.src]
+      .concat(S.headers.map(function(_,i){return p.row[i]==null?"":p.row[i];}));
+  }
+  res.cables.forEach(function(x){x.reels.forEach(function(b){
+    b.items.forEach(function(p){rows.push(line(b.id,p,b.cap));});});});
+  res.over.forEach(function(p){rows.push(line("OVERSIZE",p,p.cap));});
+  return csv(rows);
+}
+function reelCSV(){
+  var rows=[["Cable","Colors","Note","Sets per run","Reel length ft","Reels to order","Pulls","Feet used","Feet of tail"]];
+  S.result.cables.forEach(function(x){
+    rows.push([x.c,x.colors,x.key.note||"",x.key.par,f1(x.cap),x.reels.length,x.pulls,
+      f1(x.reels.reduce(function(a,b){return a+b.used;},0)),
+      f1(x.reels.reduce(function(a,b){return a+b.tail;},0))]);});
+  return csv(rows);
+}
+
+var SAMPLE=
+"Subject,Page Label,Measurement,Layer,Circuits,Voltage,Additional Notes,Conduit Type,Conduit Size,Wire Size,Ground Size,Start Location,End Location,Length Adjustment,Conduit Length,Designation\n"+
+"TC,1,\"31'-11\"\"\",UDS,,15kV,,TRAY,,600AL,750AL,CE4 MSB,CE4 XFM05,,31.91,Z3A-TC\n"+
+"TC,1,\"35'-11\"\"\",UDS,,15kV,,TRAY,,600AL,750AL,CE3 MSB,CE3 XFM05,,35.97,Z3A-TC\n"+
+"TC,1,\"170'-5\"\"\",TO OTHER CELLS,,15kV,,TRAY,,500AL,350AL,CE1 UDS01,CE3 UDS03,,170.4,W4A-TC\n"+
+"TC,1,\"171'-7\"\"\",TO OTHER CELLS,,15kV,,TRAY,,500AL,350AL,CE1 UDS01,CE4 UDS02,,171.56,W4A-TC\n"+
+"TC,1,\"54'-1\"\"\",TO OTHER CELLS,,15kV,,TRAY,,500AL,350AL,CE1 UDS01,CE2 UDS04,,54.12,W4A-TC\n"+
+"TC,1,\"226'-7\"\"\",UDS,,480,,TRAY,,250AL,#1AL,CE2 ADP01,ADMIN ATS03,,226.56,R3A-TC\n"+
+"TC,1,\"244'-6\"\"\",UDS,,480,,TRAY,,250AL,#1AL,CE4 ADP01,ADMIN ATS01,,244.48,R3A-TC\n"+
+"TC,1,\"230'-8\"\"\",UDS,,480,,TRAY,,250AL,#1AL,CE1 ADP01,ADMIN ATS04,,230.66,R3ATC\n"+
+"TC,1,\"246'-10\"\"\",UDS,,480,,TRAY,,1/0CU,#6CU,CE3 ADP01,ADMIN ATS02,,246.84,K3-TC\n"+
+"TC,1,\"67'-3\"\"\",RAIL FEEDS,CE1,480,,TRAY,,500AL,2/0AL,UDS01,BSW01,,67.25,S4A-TC\n"+
+"TC,1,\"55'-7\"\"\",RAIL FEEDS,CE1,480,,TRAY,,500AL,2/0AL,UDS01,BSW02,,55.59,S4A-TC\n"+
+"TC,1,\"55'-7\"\"\",RAIL FEEDS,CE1,480,,TRAY,,500AL,2/0AL,UDS01,BSW02,,55.59,S4A-TC\n"+
+"TC,1,\"49'-6\"\"\",RAIL FEEDS,CE1,480,,TRAY,,500AL,4/0AL,UDS01,BSW03,,49.46,U3A-TC\n"+
+"TC,1,\"31'-10\"\"\",RAIL FEEDS,CE1,480,,TRAY,,500AL,4/0AL,UDS01,BSW05,,31.86,U3A-TC\n"+
+"TC,1,,RAIL FEEDS,CE1,480,,TRAY,,500AL,4/0AL,UDS01,BSW09,,,U3A-TC\n";
+
+var NOTES={
+  ffd:"Biggest pulls first, each into the first reel with room. Fewest reels.",
+  group:"No reel shared between areas. A few more reels; nobody drags a reel across the job.",
+  seq:"Fills in takeoff order and never returns to a reel it left."};
+$("mode").onchange=function(){$("modeNote").textContent=NOTES[$("mode").value];};
+$("modeNote").textContent=NOTES.ffd;
+
+$("drop").onclick=function(){$("file").click();};
+$("drop").onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();$("file").click();}};
+$("drop").ondragover=function(e){e.preventDefault();$("drop").classList.add("hot");};
+$("drop").ondragleave=function(){$("drop").classList.remove("hot");};
+$("drop").ondrop=function(e){e.preventDefault();$("drop").classList.remove("hot");
+  var f=e.dataTransfer.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(){ingest(r.result,f.name);};r.readAsText(f);};
+$("file").onchange=function(){readFile($("file"),ingest);};
+$("loadPaste").onclick=function(){var t=$("paste").value.trim();
+  if(!t){alert("Paste the CSV first.");return;}ingest(t,"pasted");};
+$("demo").onclick=function(){$("paste").value=SAMPLE;ingest(SAMPLE,"sample");};
+$("defReel").onchange=function(){refresh();};
+$("bulkAll").onclick=function(){var v=parseLen($("defReel").value);if(!v||v<=0)return;
+  cables().forEach(function(c){S.key[c].reel=v;S.key[c].assumedReel=false;});refresh();};
+$("keyExport").onclick=function(){dl("cables.csv",keyCSV());};
+$("keyFileBtn").onclick=function(){$("keyFile").click();};
+$("keyFile").onchange=function(){readFile($("keyFile"),loadKeyCSV);};
+$("ruleAdd").onclick=function(){S.rules.push({kw:"",ft:parseFloat($("defExtra").value)||0});drawRules();};
+$("applyRules").onclick=applyRules;
+$("locExport").onclick=function(){dl("allowances.csv",locCSV());};
+$("locFileBtn").onclick=function(){$("locFile").click();};
+$("locFile").onchange=function(){readFile($("locFile"),loadLocCSV);};
+$("run").onclick=run;
+$("dlPull").onclick=function(){if(S.result)dl("pull_sheet.csv",pullCSV());};
+$("dlReel").onclick=function(){if(S.result)dl("reel_order.csv",reelCSV());};
+$("print").onclick=function(){window.print();};
+</script>
