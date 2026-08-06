@@ -48,8 +48,6 @@ details#howto summary:hover{color:var(--oxide)}
 #drop:hover,#drop.hot{border-color:var(--oxide);background:#F7F1EF}
 #drop b{font:600 20px/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;display:block}
 #drop span{font-size:13px;color:var(--muted)}
-textarea{width:100%;min-height:96px;margin-top:12px;padding:10px;border:1px solid var(--rule);
-  font:400 12.5px/1.45 "IBM Plex Mono",monospace;background:#fff;color:var(--ink);resize:vertical}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
 button{font:600 13px/1 "IBM Plex Sans",sans-serif;padding:10px 18px;border:1px solid var(--ink);
   background:var(--ink);color:var(--panel);cursor:pointer}
@@ -160,9 +158,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
   </details>
   <div id="drop" tabindex="0" role="button" aria-label="Choose or drop a CSV file">
     <b>Drop CSV here</b><span>or click to choose a file</span></div>
-  <textarea id="paste" placeholder="…or paste the CSV text here" aria-label="Paste CSV text"></textarea>
   <div class="row">
-    <button id="loadPaste" class="ghost">Load pasted text</button>
     <button id="demo" class="ghost">Load sample</button>
     <span id="fileinfo" class="reel-meta"></span>
   </div>
@@ -189,16 +185,17 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section id="s4" class="hidden noprint">
   <div class="step">4 &middot; Cables</div>
   <h2>Reels and parallels</h2>
-  <p class="hint">One row per cable found in the takeoff. Reel length is the put-up you can actually buy it on &mdash; 1000' on small wire, 500 or 250 or 200 on the big stuff. Colors are free text and only used to group the printout.</p>
+  <p class="hint">One row per cable found in the takeoff. Reel length is the put-up you can actually buy it on &mdash; 1000' on small wire, 500 or 250 or 200 on the big stuff, up to 5000' on large-drum feeder. Colors are free text and only used to group the printout.</p>
   <div class="row" style="margin-top:0">
-    <div class="fld w"><label for="defReel">Default reel (ft)</label><input id="defReel" class="num" list="putups" value="500"></div>
+    <div class="fld w"><label for="defReel">Default reel (ft)</label><input id="defReel" class="num" type="number" min="1" max="5000" list="putups" value="500"></div>
     <button id="bulkAll" class="ghost">Set every cable to this</button>
     <button id="keyExport" class="ghost">Export cable list</button>
     <button id="keyFileBtn" class="ghost">Load cable list</button>
     <input type="file" id="keyFile" accept=".csv,.txt" class="hidden">
   </div>
   <datalist id="putups"><option value="200"><option value="250"><option value="300"><option value="400">
-    <option value="500"><option value="750"><option value="1000"><option value="1500"><option value="2500"></datalist>
+    <option value="500"><option value="750"><option value="1000"><option value="1500"><option value="2500">
+    <option value="3000"><option value="4000"><option value="5000"></datalist>
   <div class="scroll" style="margin-top:14px"><table id="keytbl"></table></div>
 </section>
 
@@ -219,6 +216,9 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <button id="locExport" class="ghost">Export</button>
     <button id="locFileBtn" class="ghost">Load</button>
     <input type="file" id="locFile" accept=".csv,.txt" class="hidden">
+  </div>
+  <div class="row">
+    <button id="noExtra" class="ghost">Already in the takeoff lengths — set every location to 0</button>
   </div>
   <div class="scroll" style="max-height:300px;overflow-y:auto;margin-top:14px"><table id="loctbl"></table></div>
 </section>
@@ -328,6 +328,13 @@ function parseLen(v){
   m=s.match(/-?\d+(?:\.\d+)?/);
   return m?parseFloat(m[0]):null;
 }
+/* Reel put-ups top out around 5000' -- bigger than that and it's not a reel
+   a crew is lifting onto a trailer anymore. */
+var REEL_MAX=5000;
+function reelVal(v){var n=parseLen(v);
+  if(n==null||n<=0)return null;
+  return Math.min(REEL_MAX,n);
+}
 /* Score every (field, column) pair, then assign the strongest matches first.
    Assigning field-by-field in declaration order lets an early field with a
    weak match steal a column that a later field matches exactly -- which is
@@ -408,7 +415,7 @@ function ingest(text,name){
     if(g>-1){S.map.length=g;S.guessedLength=true;}
   }
   S.drop={};S.merge={};S.ack={};
-  S.rules=[];S.seeded=false;
+  S.rules=[];
   S.idCols=defaultIdCols();
   $("fileinfo").textContent=(name?name+" — ":"")+S.rows.length+" rows, "+S.headers.length+" columns";
   ["s2","s3","s4","s5","s6"].forEach(function(i){$(i).classList.remove("hidden");});
@@ -557,12 +564,6 @@ function refresh(){
   recs.ok.forEach(function(r){if(r.start)locs[r.start]=1;if(r.end)locs[r.end]=1;});
   Object.keys(locs).forEach(function(l){if(S.loc[l]==null)S.loc[l]=null;});
   Object.keys(S.loc).forEach(function(l){if(!locs[l])delete S.loc[l];});
-  if(!S.seeded&&Object.keys(S.loc).length){
-    S.seeded=true;
-    var d=parseFloat($("defExtra").value);if(!isFinite(d))d=0;
-    S.rules=locPatterns().map(function(pp){
-      return {kw:pp.kw,ft:KNOWN_FT[pp.kw]!=null?KNOWN_FT[pp.kw]:d};});
-  }
   drawKey();drawRules();drawSuggest();drawLoc();drawIssues();
 }
 
@@ -572,7 +573,7 @@ function refresh(){
 function similar(a,b){return squash(a)===squash(b);}
 function buildIssues(){
   var out=[],R=records(),cbs=cables();
-  var defReel=parseLen($("defReel").value)||500;
+  var defReel=reelVal($("defReel").value)||500;
 
   if(S.guessedLength&&S.map.length!=null&&!S.ack["guesslen"]){
     var gl=R.ok.map(function(r){return r.len;});
@@ -738,7 +739,7 @@ function drawIssues(){
 function doAct(iss,a){
   if(a.k==="ack")S.ack[iss.id]=1;
   else if(a.k==="merge"){S.merge[a.from]=a.to;delete S.key[a.from];}
-  else if(a.k==="reelall"){var v=parseLen($("defReel").value)||500;
+  else if(a.k==="reelall"){var v=reelVal($("defReel").value)||500;
     cables().forEach(function(c){if(!S.key[c].reel){S.key[c].reel=v;S.key[c].assumedReel=false;}});}
   else if(a.k==="bump"){S.key[a.cable].reel=a.to;S.key[a.cable].assumedReel=false;}
   else if(a.k==="addid"){if(S.idCols.indexOf(a.col)<0)S.idCols.push(a.col);drawMaps();}
@@ -763,14 +764,14 @@ function drawKey(){
       return "<tr><td><b>"+esc(c)+"</b></td>"+
         '<td class="num">'+(counts[c]||0)+"</td>"+
         '<td><input class="num" type="number" min="1" step="1" data-c="'+esc(c)+'" data-p="par" value="'+v.par+'"></td>'+
-        '<td><input class="num" list="putups" data-c="'+esc(c)+'" data-p="reel" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"></td>'+
+        '<td><input class="num" type="number" min="1" max="5000" list="putups" data-c="'+esc(c)+'" data-p="reel" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"></td>'+
         '<td><input data-c="'+esc(c)+'" data-p="colors" value="'+esc(v.colors)+'" placeholder="e.g. brown, orange, yellow"></td>'+
         '<td><input data-c="'+esc(c)+'" data-p="note" value="'+esc(v.note)+'" placeholder="connector, label, anything"></td></tr>';
     }).join("")+"</tbody>";
   Array.prototype.forEach.call($("keytbl").querySelectorAll("[data-c]"),function(el){
     el.onchange=function(){var o=S.key[el.dataset.c],p=el.dataset.p;
       if(p==="par"){var n=parseFloat(el.value);o.par=(isFinite(n)&&n>0)?Math.round(n):1;o.assumedPar=false;}
-      else if(p==="reel"){var m=parseLen(el.value);o.reel=(m&&m>0)?m:null;o.assumedReel=!o.reel;}
+      else if(p==="reel"){var m=reelVal(el.value);o.reel=m;o.assumedReel=!o.reel;if(m!=null)el.value=m;}
       else o[p]=el.value;
       refresh();};
   });
@@ -837,16 +838,23 @@ function locPatterns(){
   out.sort(function(a,b){return b.n-a.n||a.kw.localeCompare(b.kw);});
   return out.slice(0,24);
 }
+/* Suggestions only ever get proposed here -- nothing becomes a real rule (and
+   nothing gets applied to a location) until the user clicks one. That click
+   is the verification step: it's them confirming "yes, PNL means panel, and
+   that's the right extra footage" rather than the tool guessing and moving on. */
 function drawSuggest(){
   var ps=locPatterns(),el=$("suggest");
   if(!el)return;
   if(!ps.length){el.innerHTML='<span class="reel-meta">No new patterns \u2014 every repeated label already has a rule.</span>';return;}
   el.innerHTML=ps.map(function(pp){
+    var known=KNOWN_FT[pp.kw];
     return '<div class="chip" data-kw="'+esc(pp.kw)+'" title="'+esc(pp.ex.slice(0,8).join(", "))+'">'+
-      esc(pp.kw)+' <span style="opacity:.6">'+pp.n+"</span></div>";}).join("");
+      esc(pp.kw)+' <span style="opacity:.6">'+pp.n+(known!=null?" \u00b7 "+known+"ft?":"")+"</span></div>";}).join("");
   Array.prototype.forEach.call(el.querySelectorAll("[data-kw]"),function(c){
     c.onclick=function(){
-      S.rules.push({kw:c.dataset.kw,ft:parseFloat($("defExtra").value)||0});
+      var d=parseFloat($("defExtra").value);if(!isFinite(d))d=0;
+      var known=KNOWN_FT[c.dataset.kw];
+      S.rules.push({kw:c.dataset.kw,ft:known!=null?known:d});
       drawRules();drawSuggest();};
   });
 }
@@ -965,7 +973,7 @@ function conduitCSV(){
 
 /* ================= pack ================= */
 function buildPulls(){
-  var waste=parseFloat($("waste").value)||0,defReel=parseLen($("defReel").value)||500,out=[];
+  var waste=parseFloat($("waste").value)||0,defReel=reelVal($("defReel").value)||500,out=[];
   records().ok.forEach(function(r){
     var k=S.key[r.cable]||{par:1,reel:null};
     var par=Math.max(1,Math.round(k.par||1));
@@ -1074,6 +1082,7 @@ function render(res){
   if(cd.length){
     var cdFt=cd.reduce(function(a,b){return a+b.ft;},0);
     h+='<div class="grp"><h3>Conduit takeoff</h3><div class="tot">'+fc(cdFt)+' ft &middot; '+cd.length+' size'+(cd.length>1?"s":"")+'</div></div>';
+    if(S.map.adjust!=null)h+='<p class="hint" style="margin-bottom:12px">Raceway footage as measured &mdash; length adjustment, termination allowances, and cut waste are wire-only and are not added here, so a run with a length adjustment shows a different total for its conduit than for its wire.</p>';
     h+='<div class="scroll"><table><thead><tr><th>Type</th><th>Trade size</th>'+
       '<th style="width:110px">Total feet</th><th style="width:110px">Sticks (10\')</th>'+
       '<th style="width:80px">Runs</th></tr></thead><tbody>'+
@@ -1158,17 +1167,20 @@ $("drop").ondrop=function(e){e.preventDefault();$("drop").classList.remove("hot"
   var f=e.dataTransfer.files[0];if(!f)return;
   var r=new FileReader();r.onload=function(){ingest(r.result,f.name);};r.readAsText(f);};
 $("file").onchange=function(){readFile($("file"),ingest);};
-$("loadPaste").onclick=function(){var t=$("paste").value.trim();
-  if(!t){alert("Paste the CSV first.");return;}ingest(t,"pasted");};
-$("demo").onclick=function(){$("paste").value=SAMPLE;ingest(SAMPLE,"sample");};
-$("defReel").onchange=function(){refresh();};
-$("bulkAll").onclick=function(){var v=parseLen($("defReel").value);if(!v||v<=0)return;
+$("demo").onclick=function(){ingest(SAMPLE,"sample");};
+$("defReel").onchange=function(){var v=reelVal($("defReel").value);
+  if(v!=null)$("defReel").value=v;refresh();};
+$("bulkAll").onclick=function(){var v=reelVal($("defReel").value);if(!v)return;
   cables().forEach(function(c){S.key[c].reel=v;S.key[c].assumedReel=false;});refresh();};
 $("keyExport").onclick=function(){dl("cables.csv",keyCSV());};
 $("keyFileBtn").onclick=function(){$("keyFile").click();};
 $("keyFile").onchange=function(){readFile($("keyFile"),loadKeyCSV);};
 $("ruleAdd").onclick=function(){S.rules.push({kw:"",ft:parseFloat($("defExtra").value)||0});drawRules();};
 $("applyRules").onclick=applyRules;
+$("noExtra").onclick=function(){
+  $("defExtra").value=0;
+  Object.keys(S.loc).forEach(function(l){S.loc[l]=0;});
+  drawLoc();drawSuggest();drawIssues();};
 $("locExport").onclick=function(){dl("allowances.csv",locCSV());};
 $("locFileBtn").onclick=function(){$("locFile").click();};
 $("locFile").onchange=function(){readFile($("locFile"),loadLocCSV);};
