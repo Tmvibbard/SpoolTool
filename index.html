@@ -30,6 +30,20 @@ h2{font:600 26px/1.1 "Barlow Condensed",sans-serif;text-transform:uppercase;lett
 h5{font:600 13px/1 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;
   color:var(--muted);margin:22px 0 9px}
 .hint{color:var(--muted);font-size:13.5px;margin:0 0 16px;max-width:76ch}
+details#howto{border:1px solid var(--rule);background:var(--panel2);margin:0 0 16px}
+details#howto summary{cursor:pointer;padding:10px 14px;list-style:none;
+  font:600 12px/1 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em}
+details#howto summary::-webkit-details-marker{display:none}
+details#howto summary::before{content:"+ ";color:var(--oxide);font-weight:700}
+details#howto[open] summary::before{content:"\2212 "}
+details#howto summary:hover{color:var(--oxide)}
+.howto-body{padding:0 16px 14px;border-top:1px solid var(--rule)}
+.howto-body ol{margin:12px 0 0;padding-left:22px;font-size:13.5px}
+.howto-body li{margin-bottom:8px}
+.howto-note{font-size:12.5px;color:var(--muted);margin:10px 0 0;
+  border-left:3px solid var(--rule);padding-left:10px}
+.kbd{font:500 11.5px/1 "IBM Plex Mono",monospace;border:1px solid var(--rule);
+  background:#fff;padding:2px 5px;border-radius:2px}
 #drop{border:2px dashed var(--rule);background:var(--panel2);padding:34px 20px;text-align:center;cursor:pointer}
 #drop:hover,#drop.hot{border-color:var(--oxide);background:#F7F1EF}
 #drop b{font:600 20px/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;display:block}
@@ -85,7 +99,10 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 .reel{border:1px solid var(--rule);background:var(--panel2);margin-bottom:10px}
 .reel-hd{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
   padding:8px 11px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
-.reel-id{font:600 15px/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em}
+.reel-id{font:600 15px/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em;
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.spoolno{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;
+  background:var(--ink);color:var(--panel);padding:5px 8px}
 .reel-meta{font:400 11.5px/1 "IBM Plex Mono",monospace;color:var(--muted)}
 .bar{display:flex;height:30px;background:var(--tail);
   background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(0,0,0,.055) 5px 10px)}
@@ -100,6 +117,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 .desig{margin:18px 0 0}
 .desig-hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 .desig-hd h4{font:600 19px/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0}
+.spec{font:500 12.5px/1 "IBM Plex Mono",monospace;color:var(--muted);letter-spacing:0;margin-left:9px}
 .desig-hd .lbl{font:400 12px/1.3 "IBM Plex Mono",monospace;color:var(--muted)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);
   border:1px solid var(--rule);margin-bottom:6px}
@@ -123,6 +141,23 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
   <div class="step">1 &middot; Takeoff</div>
   <h2>Drop the CSV</h2>
   <p class="hint">Any takeoff export, any column order, any job. Headers are matched by meaning, not spelling, and columns it doesn't recognize ride along to the pull sheet untouched. Nothing needs deleting first.</p>
+
+  <details id="howto">
+    <summary>How to get this CSV out of Bluebeam</summary>
+    <div class="howto-body">
+      <ol>
+        <li><b>Open the Markups List.</b> It's the panel across the bottom of Revu. If it's hidden, use the Markups tab on the side, or <span class="kbd">Alt</span>+<span class="kbd">L</span>.</li>
+        <li><b>Show the columns you want.</b> Right-click any column header &rarr; <b>Columns</b> &rarr; <b>Manage Columns</b>. Only visible columns get exported, so turn on the ones that matter: your length or measurement column, Designation, Start Location, End Location, Wire Size, Ground Size, Voltage, Conduit Type, Conduit Size, Length Adjustment. Extra columns are harmless here &mdash; this tool ignores what it doesn't need &mdash; so when in doubt, leave them on.</li>
+        <li><b>Filter down to the runs you want</b>, if you only want part of the sheet. Grouping and sorting don't matter; this tool re-sorts anyway.</li>
+        <li><b>Don't flatten the PDF first.</b> Flattening strips the live markup data and the list comes out empty.</li>
+        <li><b>Click Summary</b> on the Markups List toolbar &rarr; <b>CSV Summary</b>.</li>
+        <li>Pick <b>All Pages</b> (or just the current page), keep column headers on, choose where to save it, and click OK.</li>
+        <li>Drop that file above.</li>
+      </ol>
+      <p class="howto-note"><b>If Summary only offers PDF:</b> that's a Revu 21 Basics subscription limit &mdash; CSV, XML and Print need Core or Complete. Ask whoever manages your licenses.</p>
+      <p class="howto-note"><b>Check your measurement precision</b> in Revu before exporting. If lengths come across as whole feet when you wanted inches, that's set in the measurement properties, not here.</p>
+    </div>
+  </details>
   <div id="drop" tabindex="0" role="button" aria-label="Choose or drop a CSV file">
     <b>Drop CSV here</b><span>or click to choose a file</span></div>
   <textarea id="paste" placeholder="…or paste the CSV text here" aria-label="Paste CSV text"></textarea>
@@ -170,7 +205,12 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section id="s5" class="hidden noprint">
   <div class="step">5 &middot; Terminations</div>
   <h2>Extra wire by location</h2>
-  <p class="hint">Every value found in the start and end location columns, listed once. A pull gets its start allowance plus its end allowance. Set the default, apply keyword rules, then fix the odd ones.</p>
+  <p class="hint">Every value found in the start and end location columns, listed once. A pull gets its start allowance plus its end allowance.</p>
+  <h5>Patterns found in your labels</h5>
+  <p class="hint" style="margin-bottom:9px">Read straight off this job's location names &mdash; whatever naming your crew uses. The number is how many locations share it. Click one to turn it into a rule.</p>
+  <div class="chips" id="suggest" style="margin-bottom:16px"></div>
+  <h5>Rules</h5>
+  <p class="hint" style="margin-bottom:9px">The most specific match wins, so a broad rule and a narrow one can sit together in any order. Anything unmatched gets the default.</p>
   <div class="scroll" style="margin-bottom:10px"><table id="ruletbl"></table></div>
   <div class="row" style="margin-top:0">
     <button id="ruleAdd" class="ghost sm">Add rule</button>
@@ -204,7 +244,9 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section id="out" class="hidden"></section>
 <section id="outfoot" class="hidden noprint"><div class="row" style="margin-top:0">
   <button id="dlPull">Download pull sheet (CSV)</button>
+  <button id="dlSpool" class="ghost">Download spool tags (CSV)</button>
   <button id="dlReel" class="ghost">Download reel order (CSV)</button>
+  <button id="dlConduit" class="ghost">Download conduit takeoff (CSV)</button>
   <button id="print" class="ghost">Print</button>
 </div></section>
 </div>
@@ -231,7 +273,11 @@ var FIELDS={
 };
 /* Columns offered as cable-identity candidates, in preference order */
 var ID_CANDIDATES=["designation","wire","ground","volts","ctype","csize","area","equip"];
-var DEFAULT_RULES=[["XFM",20],["MSB",15],["UDS",15],["ADP",20],["ATS",30],["PNL",10],["UPS",15],["BSW",5]];
+/* Footages we have seen before. Used only to prefill a suggested rule when
+   the job happens to use one of these stems -- never to invent rules for
+   stems this job does not contain. */
+var KNOWN_FT={XFM:20,XFMR:20,MSB:15,MDP:15,SWBD:15,UDS:15,ADP:20,ATS:30,
+  PNL:10,LP:10,UPS:15,BSW:5,MCC:20,GEN:30,RTU:10};
 var PALETTE=["#8A5A1E","#7A3E80","#26527A","#3D6B4A","#8C2C1A","#4A4E7A","#7A6A2A","#2E6B70"];
 
 function $(i){return document.getElementById(i);}
@@ -362,7 +408,7 @@ function ingest(text,name){
     if(g>-1){S.map.length=g;S.guessedLength=true;}
   }
   S.drop={};S.merge={};S.ack={};
-  if(!S.rules.length)S.rules=DEFAULT_RULES.map(function(r){return {kw:r[0],ft:r[1]};});
+  S.rules=[];S.seeded=false;
   S.idCols=defaultIdCols();
   $("fileinfo").textContent=(name?name+" — ":"")+S.rows.length+" rows, "+S.headers.length+" columns";
   ["s2","s3","s4","s5","s6"].forEach(function(i){$(i).classList.remove("hidden");});
@@ -411,11 +457,76 @@ function drawMaps(){
 
 /* ================= records ================= */
 function cell(r,k){var i=S.map[k];return i==null?"":String(r[i]==null?"":r[i]).trim();}
+/* Build the cable name the way it would be written on a pull sheet, not as a
+   generic join. Each part is tagged by what it actually is, so a ground reads
+   as a ground and a voltage reads as a voltage:
+       Z3A-TC \u00b7 #10 & #10G \u00b7 277V
+   Order is fixed regardless of the order the columns were picked. */
+var ID_ORDER=["designation","wire","ground","volts","ctype","csize","area","equip"];
+
+function fmtGround(v){
+  var t=v.trim();
+  if(!t)return "";
+  if(/\bg(nd|round)?\.?$/i.test(t))return t.toUpperCase();   // already says G
+  return t.toUpperCase()+"G";
+}
+function fmtVolts(v){
+  var t=v.trim();
+  if(!t)return "";
+  if(/^[\d\/\.\s\-]+$/.test(t))return t.replace(/\s+/g,"")+"V";  // 277 -> 277V
+  return t.toUpperCase();                                       // 15kV, 480Y/277 etc
+}
+function cableParts(r){
+  var have={},out=[];
+  ID_ORDER.forEach(function(k){
+    if(S.idCols.indexOf(k)<0)return;
+    var v=cell(r,k);
+    if(v==="")return;
+    have[k]=v;
+  });
+  if(have.designation)out.push(have.designation.toUpperCase());
+  /* conductor and ground belong together, the way a full label is written */
+  if(have.wire&&have.ground)out.push(have.wire.toUpperCase()+" & "+fmtGround(have.ground));
+  else if(have.wire)out.push(have.wire.toUpperCase());
+  else if(have.ground)out.push(fmtGround(have.ground));
+  if(have.volts)out.push(fmtVolts(have.volts));
+  ["ctype","csize","area","equip"].forEach(function(k){
+    if(have[k])out.push(have[k].toUpperCase());});
+  return out;
+}
+/* What the conductor spec actually is for a group of runs. Returns the single
+   value when every run agrees, or the list when they don't -- runs that share
+   a designation but not a wire size is a takeoff error worth surfacing. */
+function specOf(items,k){
+  var seen={},out=[];
+  items.forEach(function(p){
+    var v=(p.raw&&p.raw[k]||"").trim();
+    if(!v||/^(na|n\/a|none|-)$/i.test(v))return;
+    var u=v.toUpperCase();
+    if(!seen[u]){seen[u]=1;out.push(v);}});
+  return out;
+}
+function specLabel(items){
+  var w=specOf(items,"wire"),g=specOf(items,"ground"),v=specOf(items,"volts");
+  var bits=[];
+  if(w.length===1&&g.length===1)bits.push(w[0].toUpperCase()+" & "+fmtGround(g[0]));
+  else if(w.length===1)bits.push(w[0].toUpperCase());
+  /* A lone ground must say so -- "#10G" on its own reads like the conductor. */
+  else if(g.length===1)bits.push("GND "+g[0].toUpperCase().replace(/\s*G(ND|ROUND)?\.?$/i,""));
+  if(v.length===1)bits.push(fmtVolts(v[0]));
+  return bits.join(" \u00b7 ");
+}
 function cableOf(r){
-  var parts=S.idCols.map(function(k){return cell(r,k);}).filter(function(v){return v!=="";});
-  var name=parts.join(" / ").toUpperCase();
+  var name=cableParts(r).join(" \u00b7 ");
   if(!name)name="(UNSPECIFIED)";
   return S.merge[name]||name;
+}
+/* Reel IDs stay short -- the leading part is enough to tell reels apart. */
+function cableSlug(name){
+  var head=String(name).split(" \u00b7 ")[0];
+  var sl=head.replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toUpperCase();
+  if(sl.length>16)sl=sl.slice(0,16).replace(/-$/,"");
+  return sl||"CABLE";
 }
 function records(){
   if(S.map.length==null)return {ok:[],noLen:[],noCable:[]};
@@ -446,7 +557,13 @@ function refresh(){
   recs.ok.forEach(function(r){if(r.start)locs[r.start]=1;if(r.end)locs[r.end]=1;});
   Object.keys(locs).forEach(function(l){if(S.loc[l]==null)S.loc[l]=null;});
   Object.keys(S.loc).forEach(function(l){if(!locs[l])delete S.loc[l];});
-  drawKey();drawRules();drawLoc();drawIssues();
+  if(!S.seeded&&Object.keys(S.loc).length){
+    S.seeded=true;
+    var d=parseFloat($("defExtra").value);if(!isFinite(d))d=0;
+    S.rules=locPatterns().map(function(pp){
+      return {kw:pp.kw,ft:KNOWN_FT[pp.kw]!=null?KNOWN_FT[pp.kw]:d};});
+  }
+  drawKey();drawRules();drawSuggest();drawLoc();drawIssues();
 }
 
 /* ================= issues ================= */
@@ -541,6 +658,22 @@ function buildIssues(){
         ex:odd.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+(r.start||"?")+"\u2192"+(r.end||"?")+"  "+f1(r.len)+" ft";})});
   });
 
+  /* one cable name covering more than one conductor spec */
+  cbs.forEach(function(c){
+    var items=R.ok.filter(function(r){return r.cable===c;});
+    [["wire","wire size"],["ground","ground size"],["volts","voltage"]].forEach(function(pair){
+      if(S.map[pair[0]]==null)return;
+      var vs=specOf(items,pair[0]);
+      if(vs.length<2)return;
+      out.push({lv:"ask",id:"mixed:"+c+":"+pair[0],
+        t:c+" covers "+vs.length+" different "+pair[1]+"s",
+        d:"Runs sharing this name are being spooled onto the same reels even though they aren\u2019t the same cable: "+
+          vs.slice(0,6).join(", ")+(vs.length>6?", \u2026":"")+
+          ". Add "+pair[1]+" in step 2 to split them apart, or leave it if the name is what you order by.",
+        act:[{k:"addid",col:pair[0],label:"Split by "+pair[1]},{k:"ack",label:"Leave it"}]});
+    });
+  });
+
   /* duplicates */
   var seen={},dups=[];
   R.ok.forEach(function(r){
@@ -608,6 +741,7 @@ function doAct(iss,a){
   else if(a.k==="reelall"){var v=parseLen($("defReel").value)||500;
     cables().forEach(function(c){if(!S.key[c].reel){S.key[c].reel=v;S.key[c].assumedReel=false;}});}
   else if(a.k==="bump"){S.key[a.cable].reel=a.to;S.key[a.cable].assumedReel=false;}
+  else if(a.k==="addid"){if(S.idCols.indexOf(a.col)<0)S.idCols.push(a.col);drawMaps();}
   else if(a.k==="rules")applyRules();
   else if(a.k==="dropdup"){
     var seen={};records().ok.forEach(function(r){
@@ -667,6 +801,55 @@ function loadKeyCSV(t){
 }
 
 /* ================= terminations ================= */
+
+/* Find the naming patterns actually used in this job's location labels.
+   Splits every label on punctuation and at letter/digit boundaries, so
+   "CE4 UDS01" yields CE and UDS, and "ACC-12" yields ACC. Any stem shared by
+   two or more locations becomes a suggested rule -- no fixed word list, so a
+   job that labels everything ACC works the same as one that uses UDS. */
+function locPatterns(){
+  var locs=Object.keys(S.loc);
+  if(!locs.length)return [];
+  var hits={};
+  locs.forEach(function(l){
+    var seen={};
+    String(l).toUpperCase().split(/[^A-Z0-9]+/).forEach(function(tok){
+      if(!tok)return;
+      // split at letter/digit boundaries: UDS01 -> UDS, 01
+      (tok.match(/[A-Z]+|[0-9]+/g)||[]).forEach(function(part){
+        if(!/^[A-Z]{2,}$/.test(part))return;
+        if(seen[part])return;
+        seen[part]=1;
+        (hits[part]=hits[part]||[]).push(l);
+      });
+    });
+  });
+  var out=Object.keys(hits).filter(function(k){return hits[k].length>=2;})
+    .map(function(k){return {kw:k,n:hits[k].length,ex:hits[k]};});
+  // drop a stem that covers exactly the same locations as a longer stem
+  out=out.filter(function(a){
+    return !out.some(function(b){
+      return b.kw!==a.kw&&b.kw.length>a.kw.length&&b.n===a.n&&b.kw.indexOf(a.kw)>-1;});
+  });
+  // drop stems that already have a rule
+  out=out.filter(function(a){
+    return !S.rules.some(function(r){return norm(r.kw)===norm(a.kw);});});
+  out.sort(function(a,b){return b.n-a.n||a.kw.localeCompare(b.kw);});
+  return out.slice(0,24);
+}
+function drawSuggest(){
+  var ps=locPatterns(),el=$("suggest");
+  if(!el)return;
+  if(!ps.length){el.innerHTML='<span class="reel-meta">No new patterns \u2014 every repeated label already has a rule.</span>';return;}
+  el.innerHTML=ps.map(function(pp){
+    return '<div class="chip" data-kw="'+esc(pp.kw)+'" title="'+esc(pp.ex.slice(0,8).join(", "))+'">'+
+      esc(pp.kw)+' <span style="opacity:.6">'+pp.n+"</span></div>";}).join("");
+  Array.prototype.forEach.call(el.querySelectorAll("[data-kw]"),function(c){
+    c.onclick=function(){
+      S.rules.push({kw:c.dataset.kw,ft:parseFloat($("defExtra").value)||0});
+      drawRules();drawSuggest();};
+  });
+}
 function drawRules(){
   $("ruletbl").innerHTML='<thead><tr><th>If the location contains…</th><th style="width:120px">Extra wire ft</th><th style="width:44px"></th></tr></thead><tbody>'+
     S.rules.map(function(r,i){
@@ -677,15 +860,22 @@ function drawRules(){
     el.onchange=function(){var r=S.rules[+el.dataset.r];
       if(el.dataset.p==="ft")r.ft=parseFloat(el.value)||0;else r.kw=el.value;};});
   Array.prototype.forEach.call($("ruletbl").querySelectorAll("[data-rd]"),function(b){
-    b.onclick=function(){S.rules.splice(+b.dataset.rd,1);drawRules();};});
+    b.onclick=function(){S.rules.splice(+b.dataset.rd,1);drawRules();drawSuggest();};});
 }
+/* Most specific rule wins: the longest keyword that appears in the label.
+   That way a broad "ACC" rule and a narrow "ACC MAIN" rule can coexist
+   without you having to think about what order they sit in. */
 function applyRules(){
   var d=parseFloat($("defExtra").value);if(!isFinite(d))d=0;
   Object.keys(S.loc).forEach(function(l){
-    var v=d,n=norm(l);
-    S.rules.forEach(function(r){if(r.kw&&n.indexOf(norm(r.kw))>-1)v=r.ft;});
+    var v=d,n=norm(l),best=-1;
+    S.rules.forEach(function(r){
+      if(!r.kw)return;
+      var k=norm(r.kw);
+      if(k&&n.indexOf(k)>-1&&k.length>best){best=k.length;v=r.ft;}
+    });
     S.loc[l]=v;});
-  drawLoc();drawIssues();
+  drawLoc();drawSuggest();drawIssues();
 }
 function drawLoc(){
   var ls=Object.keys(S.loc).sort();
@@ -709,6 +899,68 @@ function loadLocCSV(t){
   rows.slice(1).forEach(function(r){var k=String(r[iL]||"").trim();if(!k)return;
     var v=parseLen(r[iF]);if(v==null)return;S.loc[k]=v;n++;});
   drawLoc();drawIssues();alert("Loaded "+n+" allowances.");
+}
+
+/* ================= conduit ================= */
+/* Trade size shows up as "3/4"", "1-1/4"", "1 1/4"", "1.25"", "#2", whatever
+   the shop types. Pull the first number-or-fraction out of the string rather
+   than matching the whole field, so a stray unit or a combined "1-1/4 EMT"
+   still reads. */
+function condSizeVal(v){
+  var s=String(v||"").trim().replace(/["″]/g,"");
+  if(!s)return null;
+  var m=s.match(/(\d+)\s*[-\s]\s*(\d+)\s*\/\s*(\d+)/);
+  if(m)return parseInt(m[1],10)+parseInt(m[2],10)/parseInt(m[3],10);
+  m=s.match(/(\d+)\s*\/\s*(\d+)/);
+  if(m)return parseInt(m[1],10)/parseInt(m[2],10);
+  m=s.match(/(\d+(?:\.\d+)?)/);
+  return m?parseFloat(m[1]):null;
+}
+function condSizeLabel(n){
+  if(n==null)return "";
+  var whole=Math.floor(n+1e-9),eighths=Math.round((n-whole)*8);
+  if(eighths>=8){whole++;eighths=0;}
+  var fr="";
+  if(eighths){var num=eighths,den=8;
+    while(num%2===0&&den%2===0){num/=2;den/=2;}
+    fr=num+"/"+den;}
+  return (whole?(fr?whole+"-"+fr:String(whole)):(fr||"0"))+'"';
+}
+/* Conduit type is free text, same as cable colors -- a job that calls it
+   "RMC" and one that calls it "RIGID" both just pass through. Size groups on
+   the parsed trade size, not the original text, so "3/4"" and "0.75" land in
+   the same bucket. */
+function conduitOf(rec){
+  var t=(rec.raw.ctype||"").trim(),sRaw=(rec.raw.csize||"").trim();
+  if(!t&&!sRaw)return null;
+  var sv=condSizeVal(sRaw);
+  return {key:(t?t.toUpperCase():"(TYPE NOT SET)")+"|"+(sv==null?"-":Math.round(sv*8)),
+    type:t?t.toUpperCase():"(TYPE NOT SET)",
+    size:sv==null?(sRaw||"—"):condSizeLabel(sv),
+    sizeVal:sv==null?-1:sv};
+}
+/* Raceway footage is counted once per takeoff row, not once per pull -- a
+   conduit gets walked once regardless of how many conductor sets end up
+   inside it, which is not true of the wire itself. This reuses the run
+   length as drawn (no termination allowance, no cut waste), since those are
+   wire-only additions. */
+function conduitTakeoff(){
+  var groups={};
+  records().ok.forEach(function(r){
+    var c=conduitOf(r);
+    if(!c)return;
+    var g=groups[c.key];
+    if(!g){g={type:c.type,size:c.size,sizeVal:c.sizeVal,ft:0,runs:0};groups[c.key]=g;}
+    g.ft+=r.len;g.runs++;
+  });
+  return Object.keys(groups).map(function(k){return groups[k];}).sort(function(a,b){
+    return a.type.localeCompare(b.type)||a.sizeVal-b.sizeVal;});
+}
+function conduitCSV(){
+  var rows=[["Conduit Type","Trade Size","Total Feet","Sticks (10ft)","Runs"]];
+  conduitTakeoff().forEach(function(g){
+    rows.push([g.type,g.size,f1(g.ft),Math.ceil(g.ft/10),g.runs]);});
+  return csv(rows);
 }
 
 /* ================= pack ================= */
@@ -762,13 +1014,17 @@ function run(){
       var r2=pack(items,cap,mode);
       r2.bins.forEach(function(b){reels.push(b);});
       r2.over.forEach(function(o){res.over.push(o);});}
-    reels.forEach(function(b,i){b.id=c.replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"")+
-      "-R"+String(i+1).padStart(2,"0");b.cap=capFull;b.tail=capFull-b.used;});
+    reels.forEach(function(b,i){
+      b.id=cableSlug(c)+"-R"+String(i+1).padStart(2,"0");
+      b.idx=i+1;b.of=reels.length;b.cable=c;b.cap=capFull;b.tail=capFull-b.used;});
     res.totReels+=reels.length;
     res.cables.push({c:c,key:S.key[c]||{par:1},reels:reels,ft:ft,pulls:items.length,
+      spec:specLabel(items),
       cap:capFull,color:PALETTE[ci%PALETTE.length],
       colors:(S.key[c]&&S.key[c].colors)||""});
   });
+  var seq=0;
+  res.cables.forEach(function(x){x.reels.forEach(function(b){b.no=++seq;});});
   S.result=res;render(res);
 }
 function render(res){
@@ -791,12 +1047,16 @@ function render(res){
     var ft=ds.reduce(function(a,b){return a+b.ft;},0);
     h+='<div class="grp"><h3>'+esc(g)+'</h3><div class="tot">'+reels+" reels &middot; "+fc(ft)+" ft</div></div>";
     ds.forEach(function(x){
-      h+='<div class="desig"><div class="desig-hd"><h4>'+esc(x.c)+'</h4><div class="lbl">'+
+      h+='<div class="desig"><div class="desig-hd"><h4>'+esc(x.c)+
+        (x.spec&&x.c.indexOf(x.spec)<0?' <span class="spec">'+esc(x.spec)+"</span>":"")+
+        '</h4><div class="lbl">'+
         (x.key.note?esc(x.key.note)+" &middot; ":"")+x.key.par+" set"+(x.key.par>1?"s":"")+
         "/run &middot; "+f1(x.cap)+" ft reels &middot; "+x.pulls+" pulls</div></div>";
       x.reels.forEach(function(b){
-        h+='<div class="reel"><div class="reel-hd"><div class="reel-id">'+esc(b.id)+
-          (b.area?' <span class="reel-meta">'+esc(b.area)+"</span>":"")+'</div><div class="reel-meta">'+
+        h+='<div class="reel"><div class="reel-hd"><div class="reel-id">'+
+          '<span class="spoolno">Spool '+String(b.no).padStart(3,"0")+"</span>"+
+          esc(b.id)+' <span class="reel-meta">'+b.idx+" of "+b.of+
+          (b.area?" &middot; "+esc(b.area):"")+'</span></div><div class="reel-meta">'+
           f1(b.used)+" / "+f1(b.cap)+" ft &middot; "+f1(b.tail)+" ft tail &middot; "+
           Math.round(b.used/b.cap*100)+"%</div></div>";
         h+='<div class="bar">'+b.items.map(function(p,i){var w=p.len/b.cap*100;
@@ -809,6 +1069,20 @@ function render(res){
       });
       h+="</div>";});
   });
+
+  var cd=conduitTakeoff();
+  if(cd.length){
+    var cdFt=cd.reduce(function(a,b){return a+b.ft;},0);
+    h+='<div class="grp"><h3>Conduit takeoff</h3><div class="tot">'+fc(cdFt)+' ft &middot; '+cd.length+' size'+(cd.length>1?"s":"")+'</div></div>';
+    h+='<div class="scroll"><table><thead><tr><th>Type</th><th>Trade size</th>'+
+      '<th style="width:110px">Total feet</th><th style="width:110px">Sticks (10\')</th>'+
+      '<th style="width:80px">Runs</th></tr></thead><tbody>'+
+      cd.map(function(g){
+        return "<tr><td>"+esc(g.type)+"</td><td>"+esc(g.size)+'</td><td class="num">'+
+          fc(g.ft)+'</td><td class="num">'+Math.ceil(g.ft/10)+'</td><td class="num">'+g.runs+"</td></tr>";
+      }).join("")+"</tbody></table></div>";
+  }
+
   o.innerHTML=h;o.classList.remove("hidden");
   $("outfoot").classList.remove("hidden");
   o.scrollIntoView({behavior:"smooth",block:"start"});
@@ -817,22 +1091,35 @@ function render(res){
 /* pull sheet keeps every original column, plus the reel assignment */
 function pullCSV(){
   var res=S.result;
-  var head=["Reel ID","Cable","Set","Start allow ft","End allow ft","Cut length ft","Reel ft","Source row"]
-    .concat(S.headers);
+  var head=["Spool #","Reel ID","Cable","Reel of","Set","Start allow ft","End allow ft",
+            "Cut length ft","Reel ft","Source row"].concat(S.headers);
   var rows=[head];
-  function line(id,p,cap){
-    return [id,p.cable,p.ofpar>1?p.par+" of "+p.ofpar:"1",f1(p.sA),f1(p.eA),f1(p.len),f1(cap),p.src]
+  function line(no,id,of,p,cap){
+    return [no,id,p.cable,of,p.ofpar>1?p.par+" of "+p.ofpar:"1",
+            f1(p.sA),f1(p.eA),f1(p.len),f1(cap),p.src]
       .concat(S.headers.map(function(_,i){return p.row[i]==null?"":p.row[i];}));
   }
   res.cables.forEach(function(x){x.reels.forEach(function(b){
-    b.items.forEach(function(p){rows.push(line(b.id,p,b.cap));});});});
-  res.over.forEach(function(p){rows.push(line("OVERSIZE",p,p.cap));});
+    b.items.forEach(function(p){rows.push(line(b.no,b.id,b.idx+" of "+b.of,p,b.cap));});});});
+  res.over.forEach(function(p){rows.push(line("","OVERSIZE","",p,p.cap));});
+  return csv(rows);
+}
+/* One row per physical reel -- this is the tag list you write on the flanges. */
+function spoolCSV(){
+  var rows=[["Spool #","Reel ID","Cable","Conductor spec","Colors","Reel of","Reel length ft",
+             "Feet used","Feet of tail","Pulls on reel","Area"]];
+  S.result.cables.forEach(function(x){x.reels.forEach(function(b){
+    rows.push([b.no,b.id,x.c,x.spec||"",x.colors,b.idx+" of "+b.of,f1(b.cap),
+      f1(b.used),f1(b.tail),b.items.length,b.area||""]);});});
   return csv(rows);
 }
 function reelCSV(){
-  var rows=[["Cable","Colors","Note","Sets per run","Reel length ft","Reels to order","Pulls","Feet used","Feet of tail"]];
+  var rows=[["Cable","Conductor spec","Colors","Note","Sets per run","Reel length ft","Reels to order",
+             "Spool numbers","Pulls","Feet used","Feet of tail"]];
   S.result.cables.forEach(function(x){
-    rows.push([x.c,x.colors,x.key.note||"",x.key.par,f1(x.cap),x.reels.length,x.pulls,
+    var nos=x.reels.map(function(b){return b.no;});
+    rows.push([x.c,x.spec||"",x.colors,x.key.note||"",x.key.par,f1(x.cap),x.reels.length,
+      nos.length?(nos.length>1?nos[0]+"-"+nos[nos.length-1]:String(nos[0])):"",x.pulls,
       f1(x.reels.reduce(function(a,b){return a+b.used;},0)),
       f1(x.reels.reduce(function(a,b){return a+b.tail;},0))]);});
   return csv(rows);
@@ -887,6 +1174,8 @@ $("locFileBtn").onclick=function(){$("locFile").click();};
 $("locFile").onchange=function(){readFile($("locFile"),loadLocCSV);};
 $("run").onclick=run;
 $("dlPull").onclick=function(){if(S.result)dl("pull_sheet.csv",pullCSV());};
+$("dlSpool").onclick=function(){if(S.result)dl("spool_tags.csv",spoolCSV());};
 $("dlReel").onclick=function(){if(S.result)dl("reel_order.csv",reelCSV());};
+$("dlConduit").onclick=function(){if(S.result)dl("conduit_takeoff.csv",conduitCSV());};
 $("print").onclick=function(){window.print();};
 </script>
