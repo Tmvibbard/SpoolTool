@@ -131,6 +131,15 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 .stat span{font:600 10.5px/1.3 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.07em;
   color:var(--muted);display:block;margin-top:4px}
 .stat.bad b{color:var(--oxide)}
+.modal-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(25,28,30,.55);
+  display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal-box{background:var(--panel);border:1px solid var(--rule);max-width:900px;width:100%;
+  max-height:85vh;display:flex;flex-direction:column}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:14px 18px;border-bottom:2px solid var(--ink)}
+.modal-hd h3{font:600 20px/1.15 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.03em;margin:0}
+.modal-body{padding:16px 18px;overflow-y:auto}
+.modal-body table input{min-width:110px}
 .hidden{display:none}
 @media print{body{background:#fff}.noprint{display:none!important}section{border:none;padding:0 0 14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -363,6 +372,13 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 </div>
 </div>
 
+<div class="modal-overlay hidden noprint" id="modalRoot">
+  <div class="modal-box">
+    <div class="modal-hd"><h3 id="modalTitle"></h3><button class="ghost sm" id="modalClose">Close</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
 <script>
 "use strict";
 var S={rows:[],headers:[],map:{},idCols:[],key:{},loc:{},rules:[],areaRules:[],drop:{},merge:{},result:null,ack:{}};
@@ -401,6 +417,19 @@ function norm(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").t
 function squash(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
 function med(a){if(!a.length)return 0;var b=a.slice().sort(function(x,y){return x-y;});
   var m=Math.floor(b.length/2);return b.length%2?b[m]:(b[m-1]+b[m])/2;}
+
+/* Generic modal shell -- used to fix up problem rows by hand instead of
+   just describing the problem. Edits inside it apply live (no Save step),
+   consistent with everything else in this tool. */
+function showModal(title,bodyHtml){
+  $("modalTitle").textContent=title;
+  $("modalBody").innerHTML=bodyHtml;
+  $("modalRoot").classList.remove("hidden");
+}
+function closeModal(){
+  $("modalRoot").classList.add("hidden");
+  $("modalBody").innerHTML="";
+}
 
 /* Lenient CSV. A double quote only opens a quoted field at the START of a
    field, and only closes one when the next character ends the field. That
@@ -738,8 +767,9 @@ function buildIssues(){
 
   if(R.noCable.length)
     out.push({lv:"ask",id:"nocable",t:R.noCable.length+" row"+(R.noCable.length>1?"s don't":" doesn't")+" say what cable it is",
-      d:"They're grouped together as (UNSPECIFIED) and will be spooled as one cable. If your takeoff identifies cable a different way, change the picks in step 2.",
-      ex:R.noCable.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+(r.start||"?")+"\u2192"+(r.end||"?")+"  "+f1(r.len)+" ft";})});
+      d:"They're grouped together as (UNSPECIFIED) and will be spooled as one cable. If your takeoff identifies cable a different way, change the picks in step 2 -- or fill it in by hand below.",
+      ex:R.noCable.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+(r.start||"?")+"\u2192"+(r.end||"?")+"  "+f1(r.len)+" ft";}),
+      act:[{k:"fixcable",label:"Fill these in"},{k:"goto",to:"s2",label:"Change the picks instead"}]});
 
   /* near-duplicate cable names */
   for(var a=0;a<cbs.length;a++)for(var b=a+1;b<cbs.length;b++){
@@ -889,7 +919,44 @@ function doAct(iss,a){
       var k=r.cable+"|"+r.start+"|"+r.end+"|"+f1(r.len);
       if(seen[k])S.drop[r.i]=1; else seen[k]=1;});}
   else if(a.k==="goto"){$(a.to).scrollIntoView({behavior:"smooth",block:"start"});return;}
+  else if(a.k==="fixcable"){openFixCableModal();return;}
   refresh();
+}
+/* Edits write straight into S.rows at the mapped column, same cell the CSV
+   came from -- there's nowhere else to put it, and it means the fix shows
+   up in every export too, not just the on-screen cable name. Only offers
+   fields that already have a column mapped; a field with nothing to write
+   to isn't useful to show here. */
+function openFixCableModal(){
+  var rows=records().noCable;
+  if(!rows.length)return;
+  var fields=S.idCols.filter(function(k){return S.map[k]!=null;});
+  if(!fields.length)fields=ID_CANDIDATES.filter(function(k){return S.map[k]!=null;});
+  if(!fields.length){
+    showModal("Fill in missing cable info",
+      '<p class="hint">No identity column is mapped yet -- pick at least one in step 2 (Designation, or Wire Size + Ground Size) before filling these in here.</p>');
+    return;
+  }
+  var body='<p class="hint">Fills in '+esc(fields.map(function(k){return FIELDS[k].label;}).join(" + "))+
+    ' directly on these rows -- the same fields step 2 uses to tell cables apart. Changes apply as you type; close this when done.</p>'+
+    '<div class="scroll" style="max-height:400px"><table><thead><tr><th>Row</th><th>Start&rarr;End</th><th style="width:70px">Length</th>'+
+    fields.map(function(k){return "<th>"+esc(FIELDS[k].label)+"</th>";}).join("")+
+    "</tr></thead><tbody>"+
+    rows.map(function(r){
+      return "<tr><td>row "+(r.i+2)+"</td><td>"+esc((r.start||"?")+"→"+(r.end||"?"))+'</td><td class="num">'+f1(r.len)+"</td>"+
+        fields.map(function(k){
+          return '<td><input data-mr="'+r.i+'" data-mf="'+k+'" value="'+esc(r.raw[k]||"")+'" placeholder="'+esc(FIELDS[k].label)+'"></td>';
+        }).join("")+"</tr>";
+    }).join("")+"</tbody></table></div>";
+  showModal(rows.length+" row"+(rows.length>1?"s":"")+" missing cable info",body);
+  Array.prototype.forEach.call($("modalBody").querySelectorAll("[data-mr]"),function(inp){
+    inp.onchange=function(){
+      var ri=+inp.dataset.mr,col=S.map[inp.dataset.mf];
+      if(col==null)return;
+      S.rows[ri][col]=inp.value;
+      refresh();
+    };
+  });
 }
 
 /* ================= cables table ================= */
@@ -1416,6 +1483,9 @@ $("dlSpool").onclick=function(){if(S.result)dl("spool_tags.csv",spoolCSV());};
 $("dlReel").onclick=function(){if(S.result)dl("reel_order.csv",reelCSV());};
 $("dlConduit").onclick=function(){if(S.result)dl("conduit_takeoff.csv",conduitCSV(records().ok));};
 $("print").onclick=function(){window.print();};
+$("modalClose").onclick=closeModal;
+$("modalRoot").onclick=function(e){if(e.target===$("modalRoot"))closeModal();};
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeModal();});
 
 /* ================================================================
    BRANCH -- circuit/conduit-fill takeoff. Same file, own state (SB),
