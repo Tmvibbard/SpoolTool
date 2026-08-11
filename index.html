@@ -325,9 +325,11 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <button id="bBulkAll" class="ghost">Set every color to this</button>
   </div>
   <h5>Neutral conductor size</h5>
-  <p class="hint" style="margin-bottom:9px">There's no separate Neutral Size column, so neutrals default to each run's own Wire Size. Set a value here to use one size for every neutral instead.</p>
+  <p class="hint" style="margin-bottom:9px">There's no separate Neutral Size column, so neutrals default to each run's own Wire Size. Add a rule to size the neutral differently on specific runs &mdash; matched against that run's From, To, and Circuits text, most specific match wins &mdash; or set a default to use one size everywhere.</p>
+  <div class="scroll" style="margin-bottom:10px"><table id="bNeutralTbl"></table></div>
   <div class="row" style="margin-top:0">
-    <div class="fld w"><label for="bNeutralSize">Neutral size override</label><input id="bNeutralSize" placeholder="same as wire size"></div>
+    <button id="bNeutralRuleAdd" class="ghost sm">Add rule</button>
+    <div class="fld w"><label for="bNeutralDefault">Default</label><input id="bNeutralDefault" placeholder="same as wire size"></div>
   </div>
   <div class="scroll" style="margin-top:14px"><table id="bKeytbl"></table></div>
 </section>
@@ -1421,7 +1423,7 @@ $("print").onclick=function(){window.print();};
    (parseCSV, autoMap, pack, conduitOf/conduitTakeoff, reelVal, etc.)
    instead of duplicating them.
    ================================================================ */
-var SB={rows:[],headers:[],map:{},key:{},drop:{},ack:{},result:null,defVoltClass:"low"};
+var SB={rows:[],headers:[],map:{},key:{},drop:{},ack:{},result:null,defVoltClass:"low",neutralRules:[]};
 var BFIELDS={
   length:{label:"Run length",req:true,alias:["conduit length","wire length","measurement","length","run length","meas","dimension","footage","lf","linear feet","total length"]},
   circuits:{label:"Circuits",req:true,alias:["circuits","circuit","circuit numbers","circuit no","ckt"]},
@@ -1534,14 +1536,31 @@ function bRecords(){
   });
   return {ok:ok,noLen:noLen,noCirc:noCirc,withLen:withLen};
 }
+/* Same longest-keyword-wins shape as termination/area rules, matched
+   against a run's From, To, and Circuits text so a specific line (or a
+   group of them) can get a different neutral size -- e.g. an oversized
+   neutral for harmonic loads on one run, without changing every neutral
+   job-wide. Falls back to the Default field, then the run's own Wire Size. */
+function resolveNeutralSize(rec){
+  var hay=norm((rec.start||"")+" "+(rec.end||"")+" "+(rec.circuitsRaw||"")),best=-1,val=null;
+  SB.neutralRules.forEach(function(r){
+    if(!r.kw)return;
+    var k=norm(r.kw);
+    if(k&&hay.indexOf(k)>-1&&k.length>best){best=k.length;val=r.size;}
+  });
+  if(val)return val;
+  var def=$("bNeutralDefault")?$("bNeutralDefault").value.trim():"";
+  if(def)return def;
+  return rec.wireRaw||"?";
+}
 /* Expands each conduit run into one "pull" per conductor: one per circuit
-   (phase color, Wire Size), one per neutral term (White, Neutral-Size-or-
-   override), one ground per run (Green, Ground Size). All pulls from one
-   row share that row's length plus Length Adjustment -- they're cut off
-   the same physical run, wire-length rules apply the same as One Line. */
+   (phase color, Wire Size), one per neutral term (White, sized by
+   resolveNeutralSize), one ground per run (Green, Ground Size). All pulls
+   from one row share that row's length plus Length Adjustment -- they're
+   cut off the same physical run, wire-length rules apply the same as
+   One Line. */
 function bBuildPulls(){
   var waste=parseFloat($("bWaste").value)||0;
-  var neutOverride=$("bNeutralSize")?$("bNeutralSize").value.trim():"";
   var out=[];
   bRecords().ok.forEach(function(r){
     var hv=isHighVolt(r.voltsRaw);
@@ -1552,7 +1571,7 @@ function bBuildPulls(){
         out.push({run:r,color:phaseColor(cnum,hv),size:r.wireRaw||"?",role:"phase",circuit:cnum,len:each,base:r.len});
       });
       if(term.neutral)
-        out.push({run:r,color:"White",size:neutOverride||r.wireRaw||"?",role:"neutral",
+        out.push({run:r,color:"White",size:resolveNeutralSize(r),role:"neutral",
           circuits:term.circuits.slice(),shared:term.shared,len:each,base:r.len});
     });
     out.push({run:r,color:"Green",size:r.groundRaw||"?",role:"ground",len:each,base:r.len});
@@ -1590,7 +1609,7 @@ function bIngest(text,name){
     if(SB.map.start==null||colFilledAt(SB.map.start,SB.rows)<0.2){SB.map.start=locFallback;SB.guessedLoc=true;}
     if(SB.map.end==null||colFilledAt(SB.map.end,SB.rows)<0.2){SB.map.end=locFallback;SB.guessedLoc=true;}
   }
-  SB.drop={};SB.ack={};SB.key={};SB.defVoltClass="low";
+  SB.drop={};SB.ack={};SB.key={};SB.defVoltClass="low";SB.neutralRules=[];
   $("bFileinfo").textContent=(name?name+" — ":"")+SB.rows.length+" rows, "+SB.headers.length+" columns";
   ["bS2","bS3","bS4","bS6"].forEach(function(i){$(i).classList.remove("hidden");});
   drawBMaps();bRefresh();
@@ -1613,7 +1632,20 @@ function drawBMaps(){
 function bRefresh(){
   var ids=bIdentities();
   ids.forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};});
-  drawBKey();drawBIssues();
+  drawBKey();drawBNeutralRules();drawBIssues();
+}
+function drawBNeutralRules(){
+  var el=$("bNeutralTbl");if(!el)return;
+  el.innerHTML='<thead><tr><th>If the run’s From/To/Circuits contains…</th><th style="width:140px">Neutral size</th><th style="width:44px"></th></tr></thead><tbody>'+
+    SB.neutralRules.map(function(r,i){
+      return '<tr><td><input data-nr="'+i+'" data-p="kw" value="'+esc(r.kw)+'"></td>'+
+        '<td><input data-nr="'+i+'" data-p="size" value="'+esc(r.size)+'"></td>'+
+        '<td><button class="ghost sm" data-nrd="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
+  Array.prototype.forEach.call(el.querySelectorAll("[data-nr]"),function(inp){
+    inp.onchange=function(){var r=SB.neutralRules[+inp.dataset.nr];
+      if(inp.dataset.p==="size")r.size=inp.value;else r.kw=inp.value;};});
+  Array.prototype.forEach.call(el.querySelectorAll("[data-nrd]"),function(b){
+    b.onclick=function(){SB.neutralRules.splice(+b.dataset.nrd,1);drawBNeutralRules();};});
 }
 function buildBIssues(){
   var out=[],R=bRecords();
@@ -1749,18 +1781,6 @@ function bRender(res){
   if(diff>0)h+='<div class="iss stop"><h6>'+diff+" more reel"+(diff>1?"s":"")+
     " than total feet ÷ reel length</h6><p>A pull can’t be spliced across two reels, so a footage total always under-counts.</p></div>";
 
-  var runList=bRunGroups(res.pulls);
-  h+='<div class="grp"><h3>Run schedule</h3><div class="tot">'+runList.length+" run"+(runList.length>1?"s":"")+'</div></div>';
-  h+='<div class="scroll"><table><thead><tr><th>Run</th><th>From</th><th>To</th><th>Conduit</th>'+
-    '<th style="width:80px">Length</th><th>Circuits</th><th>Colors</th><th>Wire</th><th>Ground</th></tr></thead><tbody>'+
-    runList.map(function(x,i){
-      var r=x.run,cd=conduitOf(r);
-      return '<tr><td>Run '+String(i+1).padStart(3,"0")+'</td><td>'+esc(r.start||"—")+'</td><td>'+
-        esc(r.end||r.start||"—")+'</td><td>'+(cd?esc(cd.type)+" "+esc(cd.size):"—")+
-        '</td><td class="num">'+f1(r.len)+'</td><td>'+esc(r.circuitsRaw)+'</td><td>'+esc(describeRun(x.pulls))+
-        '</td><td>'+esc(r.wireRaw||"—")+'</td><td>'+esc(r.groundRaw||"—")+"</td></tr>";
-    }).join("")+"</tbody></table></div>";
-
   res.groups.forEach(function(x){
     h+='<div class="desig"><div class="desig-hd"><h4>'+esc(x.id)+'</h4><div class="lbl">'+
       f1(x.cap)+" ft reels &middot; "+x.pulls+" pulls</div></div>";
@@ -1802,14 +1822,22 @@ function bRender(res){
   o.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
+/* Resolved voltage class, plus whether it was read straight off the row or
+   assumed from the step-3 default -- so a run schedule export can be spot-
+   checked instead of just trusted. */
+function resolvedVoltClass(r){
+  var hv=isHighVolt(r.voltsRaw),assumed=hv==null;
+  if(hv==null)hv=SB.defVoltClass==="high";
+  return (hv?"High":"Low")+(assumed?" (assumed)":"");
+}
 /* ---- CSV exports ---- */
 function bRunsCSV(pulls){
   var runList=bRunGroups(pulls);
-  var rows=[["Run #","From","To","Conduit Type","Conduit Size","Length ft","Circuits","Colors","Wire Size","Ground Size","Source row"]];
+  var rows=[["Run #","From","To","Conduit Type","Conduit Size","Length ft","Circuits","Voltage (raw)","Voltage Class","Colors","Wire Size","Ground Size","Source row"]];
   runList.forEach(function(x,i){
     var r=x.run,cd=conduitOf(r);
     rows.push(["Run "+String(i+1).padStart(3,"0"),r.start||"",r.end||r.start||"",cd?cd.type:"",cd?cd.size:"",
-      f1(r.len),r.circuitsRaw,describeRun(x.pulls),r.wireRaw||"",r.groundRaw||"",r.i+2]);
+      f1(r.len),r.circuitsRaw,r.voltsRaw||"",resolvedVoltClass(r),describeRun(x.pulls),r.wireRaw||"",r.groundRaw||"",r.i+2]);
   });
   return csv(rows);
 }
@@ -1873,6 +1901,7 @@ $("bDemo").onclick=function(){bIngest(BRANCH_SAMPLE,"sample");};
 $("bDefReel").onchange=function(){var v=reelVal($("bDefReel").value);if(v!=null)$("bDefReel").value=v;};
 $("bBulkAll").onclick=function(){var v=reelVal($("bDefReel").value);if(!v)return;
   bIdentities().forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};SB.key[id].reel=v;});drawBKey();};
+$("bNeutralRuleAdd").onclick=function(){SB.neutralRules.push({kw:"",size:""});drawBNeutralRules();};
 $("bMode").onchange=function(){$("bModeNote").textContent=BNOTES[$("bMode").value];};
 $("bModeNote").textContent=BNOTES.ffd;
 $("bRun").onclick=bRun;
