@@ -1414,15 +1414,19 @@ function spoolCSV(){
       f1(b.used),f1(b.tail),b.items.length,b.area||""]);});});
   return csv(rows);
 }
+/* This is the sheet a foreman hands to a supplier, so it stays limited to
+   what you'd actually order by: cable, spec, put-up length, how many
+   reels, and the exact footage that drove that count. Spool numbers, pull
+   counts, and tail footage are tracking detail for the crew pulling wire,
+   not the purchase -- they're already on the spool tags and pull sheet
+   exports. (Spool number *ranges* used to live here too, formatted like
+   "5-19" -- Excel's CSV import reliably misreads that as a date on open,
+   which is the other reason it doesn't belong on an order sheet.) */
 function reelCSV(){
-  var rows=[["Cable","Conductor spec","Colors","Note","Sets per run","Reel length ft","Reels to order",
-             "Spool numbers","Pulls","Feet used","Feet of tail"]];
+  var rows=[["Cable","Conductor spec","Colors","Reel length ft","Reels to order","Total feet"]];
   S.result.cables.forEach(function(x){
-    var nos=x.reels.map(function(b){return b.no;});
-    rows.push([x.c,x.spec||"",x.colors,x.key.note||"",x.key.par,f1(x.cap),x.reels.length,
-      nos.length?(nos.length>1?nos[0]+"-"+nos[nos.length-1]:String(nos[0])):"",x.pulls,
-      f1(x.reels.reduce(function(a,b){return a+b.used;},0)),
-      f1(x.reels.reduce(function(a,b){return a+b.tail;},0))]);});
+    rows.push([x.c,x.spec||"",x.colors,f1(x.cap),x.reels.length,
+      f1(x.reels.reduce(function(a,b){return a+b.used;},0))]);});
   return csv(rows);
 }
 
@@ -1957,14 +1961,16 @@ function bSpoolCSV(){
     rows.push([b.no,b.id,x.color,x.size,f1(b.cap),f1(b.used),f1(b.tail),b.items.length]);});});
   return csv(rows);
 }
+/* Same reasoning as One Line's reelCSV -- this is the buy sheet, so it's
+   just color/size/put-up/count/exact footage. Spool numbers, pulls, and
+   tail are tracking detail for the crew, already on the other exports (and
+   a spool-number range formatted "5-19" is exactly the string Excel's CSV
+   import misreads as a date on open). */
 function bReelCSV(){
-  var rows=[["Color","Size","Reel length ft","Reels to order","Spool numbers","Pulls","Feet used","Feet of tail"]];
+  var rows=[["Color","Size","Reel length ft","Reels to order","Total feet"]];
   SB.result.groups.forEach(function(x){
-    var nos=x.reels.map(function(b){return b.no;});
     rows.push([x.color,x.size,f1(x.cap),x.reels.length,
-      nos.length?(nos.length>1?nos[0]+"-"+nos[nos.length-1]:String(nos[0])):"",x.pulls,
-      f1(x.reels.reduce(function(a,b){return a+b.used;},0)),
-      f1(x.reels.reduce(function(a,b){return a+b.tail;},0))]);
+      f1(x.reels.reduce(function(a,b){return a+b.used;},0))]);
   });
   return csv(rows);
 }
