@@ -9,7 +9,7 @@
 :root{
   --concrete:#D2D6D4;--panel:#FBFBF9;--panel2:#F0F1EE;
   --ink:#191C1E;--muted:#5C6468;--rule:#B6BAB9;--rule2:#DDE0DD;
-  --oxide:#B33A24;--warn:#C88A00;--ok:#3D6B4A;--tail:#C7CBC8;
+  --oxide:#B33A24;--azure:#2456A6;--warn:#C88A00;--ok:#3D6B4A;--tail:#C7CBC8;
 }
 *{box-sizing:border-box}html,body{margin:0;padding:0}
 body{background:var(--concrete);color:var(--ink);
@@ -21,6 +21,13 @@ h1{font:700 46px/0.9 "Barlow Condensed",sans-serif;letter-spacing:.02em;text-tra
 h1 em{font-style:normal;color:var(--oxide)}
 .sub{font:500 13px/1.3 "IBM Plex Mono",monospace;color:var(--muted);
   text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px}
+.tabs{display:flex;gap:8px;margin:16px 0 0}
+.tab{font:600 12px/1 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.1em;
+  padding:9px 16px;border:1px solid var(--rule);background:transparent;color:var(--muted);cursor:pointer}
+.tab[data-tool="one"]{border-color:var(--oxide);color:var(--oxide)}
+.tab[data-tool="one"].on,.tab[data-tool="one"]:hover{background:var(--oxide);color:#fff}
+.tab[data-tool="branch"]{border-color:var(--azure);color:var(--azure)}
+.tab[data-tool="branch"].on,.tab[data-tool="branch"]:hover{background:var(--azure);color:#fff}
 section{background:var(--panel);border:1px solid var(--rule);border-top:none;padding:22px 24px 26px}
 section:first-of-type{border-top:1px solid var(--rule)}
 .step{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
@@ -30,13 +37,13 @@ h2{font:600 26px/1.1 "Barlow Condensed",sans-serif;text-transform:uppercase;lett
 h5{font:600 13px/1 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;
   color:var(--muted);margin:22px 0 9px}
 .hint{color:var(--muted);font-size:13.5px;margin:0 0 16px;max-width:76ch}
-details#howto{border:1px solid var(--rule);background:var(--panel2);margin:0 0 16px}
-details#howto summary{cursor:pointer;padding:10px 14px;list-style:none;
+details.howto{border:1px solid var(--rule);background:var(--panel2);margin:0 0 16px}
+details.howto summary{cursor:pointer;padding:10px 14px;list-style:none;
   font:600 12px/1 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em}
-details#howto summary::-webkit-details-marker{display:none}
-details#howto summary::before{content:"+ ";color:var(--oxide);font-weight:700}
-details#howto[open] summary::before{content:"\2212 "}
-details#howto summary:hover{color:var(--oxide)}
+details.howto summary::-webkit-details-marker{display:none}
+details.howto summary::before{content:"+ ";color:var(--oxide);font-weight:700}
+details.howto[open] summary::before{content:"\2212 "}
+details.howto summary:hover{color:var(--oxide)}
 .howto-body{padding:0 16px 14px;border-top:1px solid var(--rule)}
 .howto-body ol{margin:12px 0 0;padding-left:22px;font-size:13.5px}
 .howto-body li{margin-bottom:8px}
@@ -44,10 +51,10 @@ details#howto summary:hover{color:var(--oxide)}
   border-left:3px solid var(--rule);padding-left:10px}
 .kbd{font:500 11.5px/1 "IBM Plex Mono",monospace;border:1px solid var(--rule);
   background:#fff;padding:2px 5px;border-radius:2px}
-#drop{border:2px dashed var(--rule);background:var(--panel2);padding:34px 20px;text-align:center;cursor:pointer}
-#drop:hover,#drop.hot{border-color:var(--oxide);background:#F7F1EF}
-#drop b{font:600 20px/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;display:block}
-#drop span{font-size:13px;color:var(--muted)}
+#drop,#bDrop{border:2px dashed var(--rule);background:var(--panel2);padding:34px 20px;text-align:center;cursor:pointer}
+#drop:hover,#drop.hot,#bDrop:hover,#bDrop.hot{border-color:var(--oxide);background:#F7F1EF}
+#drop b,#bDrop b{font:600 20px/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;display:block}
+#drop span,#bDrop span{font-size:13px;color:var(--muted)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
 button{font:600 13px/1 "IBM Plex Sans",sans-serif;padding:10px 18px;border:1px solid var(--ink);
   background:var(--ink);color:var(--panel);cursor:pointer}
@@ -56,7 +63,7 @@ button.ghost{background:transparent;color:var(--ink)}
 button.ghost:hover{background:var(--ink);color:var(--panel)}
 button.sm{padding:6px 11px;font-size:12px}
 button:disabled{background:var(--rule);border-color:var(--rule);color:#8A8F92;cursor:not-allowed}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,#drop:focus-visible{
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,#drop:focus-visible,#bDrop:focus-visible{
   outline:3px solid var(--oxide);outline-offset:2px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{font:600 11px/1.2 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.07em;
@@ -132,15 +139,22 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <div class="wrap">
 <header><div class="tag">
   <h1>Spool <em>Sheet</em></h1>
-  <div class="sub">Takeoff CSV &rarr; packed reel order</div>
-</div></header>
+  <div class="sub" id="toolSub">Takeoff CSV &rarr; packed reel order</div>
+</div>
+<div class="tabs noprint">
+  <button class="tab on" data-tool="one">One Line</button>
+  <button class="tab" data-tool="branch">Branch</button>
+</div>
+</header>
 
+<div id="toolOne">
 <section class="noprint">
   <div class="step">1 &middot; Takeoff</div>
   <h2>Drop the CSV</h2>
+  <p class="hint"><b>What this does:</b> turns a Bluebeam Markups List export of trunk/feeder cable takeoffs into a reel order &mdash; how many reels of each cable to buy, which pulls go on which physical reel, and a numbered tag for every reel. <b>For accurate results:</b> give every run a real measured length, use a consistent Designation (or Wire Size + Ground Size if the job has no naming scheme) so the right runs get grouped onto the same reels, and fill in Start/End Location if you want per-end termination allowances calculated automatically instead of assumed.</p>
   <p class="hint">Any takeoff export, any column order, any job. Headers are matched by meaning, not spelling, and columns it doesn't recognize ride along to the pull sheet untouched. Nothing needs deleting first.</p>
 
-  <details id="howto">
+  <details class="howto">
     <summary>How to get this CSV out of Bluebeam</summary>
     <div class="howto-body">
       <ol>
@@ -226,6 +240,11 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section id="s6" class="hidden noprint">
   <div class="step">6 &middot; Packing</div>
   <h2>How to fill the reels</h2>
+  <h5>Group reels by area</h5>
+  <p class="hint" style="margin-bottom:9px">Only matters for "Keep each area on its own reels" below. Uses whatever column got mapped to Area/Cell in step 2, unless you add a rule here &mdash; useful when the split you care about (CE1 vs CE2 vs CE3&hellip;) lives inside the location text instead of its own column. Rules apply the moment you add them; the longest match wins.</p>
+  <div class="chips" id="areaSuggest" style="margin-bottom:12px"></div>
+  <div class="scroll" style="margin-bottom:10px"><table id="areatbl"></table></div>
+  <div class="row" style="margin-top:0;margin-bottom:18px"><button id="areaRuleAdd" class="ghost sm">Add rule</button></div>
   <div class="grid">
     <div class="fld"><label for="mode">Strategy</label>
       <select id="mode">
@@ -251,9 +270,100 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 </div></section>
 </div>
 
+<div id="toolBranch" class="hidden" style="--oxide:var(--azure)">
+<section class="noprint">
+  <div class="step">1 &middot; Takeoff</div>
+  <h2>Drop the branch CSV</h2>
+  <p class="hint"><b>What this does:</b> turns a Bluebeam branch-circuit export into a run-by-run conduit schedule and a color-coded wire spool order, so nobody's hand-tracking which phase color and neutral each circuit needs. <b>For accurate results:</b> set Voltage on every run using Bluebeam's High Volt/Low Volt picker (it decides brown/orange/yellow vs black/red/blue), and enter Circuits using this notation &mdash; a bare number with no letter means no neutral is pulled for it (<code>4</code>); add a trailing N for a circuit with its own neutral (<code>4N</code>); wrap circuits that share one neutral in parentheses with a trailing N (<code>(4,6)N</code>); separate multiple circuits or groups in the same conduit with commas, e.g. <code>1N,(25,27)N</code> &mdash; one circuit with its own neutral, plus two circuits sharing one.</p>
+  <p class="hint">Same Bluebeam CSV Summary workflow as One Line, just a different export. Same lenient parsing: any column order, any job, unrecognized columns ride along untouched.</p>
+
+  <details class="howto">
+    <summary>How to get this CSV out of Bluebeam</summary>
+    <div class="howto-body">
+      <ol>
+        <li><b>Open the Markups List.</b> It's the panel across the bottom of Revu. If it's hidden, use the Markups tab on the side, or <span class="kbd">Alt</span>+<span class="kbd">L</span>.</li>
+        <li><b>Show the columns you want.</b> Right-click any column header &rarr; <b>Columns</b> &rarr; <b>Manage Columns</b>. Only visible columns get exported, so turn on the ones that matter here: your length or measurement column, Circuits, Voltage, Wire Size, Ground Size, Conduit Type, Conduit Size, and Start/End Location (or Layer, if that's where your panel names live). Extra columns are harmless &mdash; this tool ignores what it doesn't need.</li>
+        <li><b>Filter down to the runs you want</b>, if you only want part of the sheet. Grouping and sorting don't matter; this tool re-sorts anyway.</li>
+        <li><b>Don't flatten the PDF first.</b> Flattening strips the live markup data and the list comes out empty.</li>
+        <li><b>Click Summary</b> on the Markups List toolbar &rarr; <b>CSV Summary</b>.</li>
+        <li>Pick <b>All Pages</b> (or just the current page), keep column headers on, choose where to save it, and click OK.</li>
+        <li>Drop that file above.</li>
+      </ol>
+      <p class="howto-note"><b>If Summary only offers PDF:</b> that's a Revu 21 Basics subscription limit &mdash; CSV, XML and Print need Core or Complete. Ask whoever manages your licenses.</p>
+      <p class="howto-note"><b>Double-check the Circuits notation</b> before exporting a big set &mdash; a stray character (a comma outside parentheses, a missing close-paren) just drops that circuit from the count rather than erroring loudly, so it's worth a spot-check on step 3 after loading.</p>
+    </div>
+  </details>
+  <div id="bDrop" tabindex="0" role="button" aria-label="Choose or drop a CSV file">
+    <b>Drop CSV here</b><span>or click to choose a file</span></div>
+  <div class="row">
+    <button id="bDemo" class="ghost">Load sample</button>
+    <span id="bFileinfo" class="reel-meta"></span>
+  </div>
+  <input type="file" id="bFile" accept=".csv,.txt" class="hidden">
+</section>
+
+<section id="bS2" class="hidden noprint">
+  <div class="step">2 &middot; Columns</div>
+  <h2>What it found</h2>
+  <p class="hint">A length, and a Circuits column with the phase/neutral notation. Change anything it got wrong.</p>
+  <div class="maps" id="bMaps"></div>
+</section>
+
+<section id="bS3" class="hidden noprint">
+  <div class="step" id="bS3step">3 &middot; Check</div>
+  <h2>Anything look wrong?</h2>
+  <p class="hint">Everything below can be answered right here. Nothing is blocking unless it says so.</p>
+  <div id="bIssues"></div>
+</section>
+
+<section id="bS4" class="hidden noprint">
+  <div class="step">4 &middot; Reels</div>
+  <h2>Reel length by color</h2>
+  <p class="hint">One row per color/size found in the takeoff &mdash; that's the cable identity here, same way Designation is on One Line. Reel length is the put-up you'd actually buy it on.</p>
+  <div class="row" style="margin-top:0">
+    <div class="fld w"><label for="bDefReel">Default reel (ft)</label><input id="bDefReel" class="num" type="number" min="1" max="5000" list="putups" value="2500"></div>
+    <button id="bBulkAll" class="ghost">Set every color to this</button>
+  </div>
+  <h5>Neutral conductor size</h5>
+  <p class="hint" style="margin-bottom:9px">There's no separate Neutral Size column, so neutrals default to each run's own Wire Size. Set a value here to use one size for every neutral instead.</p>
+  <div class="row" style="margin-top:0">
+    <div class="fld w"><label for="bNeutralSize">Neutral size override</label><input id="bNeutralSize" placeholder="same as wire size"></div>
+  </div>
+  <div class="scroll" style="margin-top:14px"><table id="bKeytbl"></table></div>
+</section>
+
+<section id="bS6" class="hidden noprint">
+  <div class="step">5 &middot; Packing</div>
+  <h2>How to fill the reels</h2>
+  <div class="grid">
+    <div class="fld"><label for="bMode">Strategy</label>
+      <select id="bMode">
+        <option value="ffd">Fewest reels</option>
+        <option value="seq">Takeoff order</option>
+      </select><small id="bModeNote"></small></div>
+    <div class="fld"><label for="bHold">Hold back per reel (ft)</label>
+      <input id="bHold" class="num" type="number" value="0" min="0"><small>Margin left on every reel.</small></div>
+    <div class="fld"><label for="bWaste">Cut waste per pull (ft)</label>
+      <input id="bWaste" class="num" type="number" value="0" min="0"><small>Added to every pull.</small></div>
+  </div>
+  <div class="row"><button id="bRun">Build order sheet</button><span id="bRunWhy" class="reel-meta"></span></div>
+</section>
+
+<section id="bOut" class="hidden"></section>
+<section id="bOutfoot" class="hidden noprint"><div class="row" style="margin-top:0">
+  <button id="bDlRuns">Download run schedule (CSV)</button>
+  <button id="bDlPull" class="ghost">Download pull sheet (CSV)</button>
+  <button id="bDlSpool" class="ghost">Download spool tags (CSV)</button>
+  <button id="bDlReel" class="ghost">Download reel order (CSV)</button>
+  <button id="bDlConduit" class="ghost">Download conduit takeoff (CSV)</button>
+  <button id="bPrint" class="ghost">Print</button>
+</div></section>
+</div>
+</div>
+
 <script>
 "use strict";
-var S={rows:[],headers:[],map:{},idCols:[],key:{},loc:{},rules:[],drop:{},merge:{},result:null,ack:{}};
+var S={rows:[],headers:[],map:{},idCols:[],key:{},loc:{},rules:[],areaRules:[],drop:{},merge:{},result:null,ack:{}};
 
 /* Recognized fields. Everything not listed still rides along to the pull sheet. */
 var FIELDS={
@@ -262,7 +372,7 @@ var FIELDS={
   start:{label:"Start location",alias:["start location","start","from","origin","source panel","panel"]},
   end:{label:"End location",alias:["end location","end","to","destination","load"]},
   adjust:{label:"Length adjustment",alias:["length adjustment","length adj","adjustment","adder","extra wire"]},
-  area:{label:"Area / cell",alias:["cell","area","circuits","layer","zone","room","level","building"]},
+  area:{label:"Area / cell",alias:["cell","area","zone","room","level","building"]},
   wire:{label:"Wire size",alias:["wire size","conductor size","size","awg"]},
   ground:{label:"Ground size",alias:["ground size","ground","egc","ground_size"]},
   volts:{label:"Voltage",alias:["voltage","volts","system voltage"]},
@@ -348,10 +458,10 @@ function scoreHeader(header,alias,rank){
   if(t.length>=6&&n.indexOf(t)>-1)return 60-rank;
   return 0;
 }
-function autoMap(h){
+function autoMap(h,fields){
   var pairs=[];
-  Object.keys(FIELDS).forEach(function(k){
-    FIELDS[k].alias.forEach(function(t,rank){
+  Object.keys(fields).forEach(function(k){
+    fields[k].alias.forEach(function(t,rank){
       h.forEach(function(x,i){
         var sc=scoreHeader(x,t,rank);
         if(sc>0)pairs.push({f:k,c:i,s:sc});
@@ -370,24 +480,24 @@ function autoMap(h){
 /* If no header looked like a length, find the column that reads like one:
    mostly parseable, mostly positive, and not obviously a page or ID number.
    Header names vary too much between shops to enumerate them all. */
-function guessLengthCol(map){
+function guessLengthCol(map,headers,rows){
   var best=-1,bestScore=0,taken={};
   Object.keys(map).forEach(function(k){taken[map[k]]=1;});
-  S.headers.forEach(function(h,c){
+  headers.forEach(function(h,c){
     if(taken[c])return;
     var vals=[],hits=0;
-    S.rows.forEach(function(r){
+    rows.forEach(function(r){
       var v=String(r[c]==null?"":r[c]).trim();
       if(!v)return;
       var n=parseLen(v);
       if(n!=null&&n>0){hits++;vals.push(n);}
     });
-    if(vals.length<Math.max(2,S.rows.length*0.5))return;
+    if(vals.length<Math.max(2,rows.length*0.5))return;
     var m=med(vals);
     if(m<3||m>100000)return;                       // page numbers, flags, prices
     var feetish=0;
-    S.rows.forEach(function(r){if(/['\u2032"]/.test(String(r[c]||"")))feetish++;});
-    var sc=hits/S.rows.length*100+Math.min(30,m/10)+(feetish?40:0);
+    rows.forEach(function(r){if(/['\u2032"]/.test(String(r[c]||"")))feetish++;});
+    var sc=hits/rows.length*100+Math.min(30,m/10)+(feetish?40:0);
     if(sc>bestScore){bestScore=sc;best=c;}
   });
   return best;
@@ -408,25 +518,47 @@ function ingest(text,name){
   if(rows.length<2){alert("No data rows in that file.");return;}
   S.headers=rows[0].map(function(h){return String(h).trim();});
   S.rows=rows.slice(1);
-  S.map=autoMap(S.headers);
+  S.map=autoMap(S.headers,FIELDS);
   S.guessedLength=false;
   if(S.map.length==null){
-    var g=guessLengthCol(S.map);
+    var g=guessLengthCol(S.map,S.headers,S.rows);
     if(g>-1){S.map.length=g;S.guessedLength=true;}
   }
+  /* No column reliably means "area/cell" across every job -- some export
+     circuit numbers under a header that would otherwise look like a fit
+     (see FIELDS.area). Rather than trust header text alone, try likely
+     candidates in order -- Notes, then Start/End Location, then the
+     Bluebeam-standard Layer/Source Panel columns -- and use the first one
+     that actually has data, since a job that leaves Notes blank but names
+     every panel in Layer shouldn't get pointed at an empty column. */
+  S.guessedArea=false;
+  if(S.map.area==null){
+    var areaCands=[S.map.notes,S.map.start,S.map.end,findHeaderCol("layer",S.headers),findHeaderCol("source panel",S.headers)]
+      .filter(function(c){return c!=null&&c>-1;});
+    var best=null;
+    areaCands.forEach(function(c){if(best==null&&colFilledAt(c,S.rows)>0.2)best=c;});
+    if(best==null&&areaCands.length)best=areaCands[0];
+    if(best!=null){S.map.area=best;S.guessedArea=true;}
+  }
   S.drop={};S.merge={};S.ack={};
-  S.rules=[];
+  S.rules=[];S.areaRules=[];
   S.idCols=defaultIdCols();
   $("fileinfo").textContent=(name?name+" — ":"")+S.rows.length+" rows, "+S.headers.length+" columns";
   ["s2","s3","s4","s5","s6"].forEach(function(i){$(i).classList.remove("hidden");});
   drawMaps();refresh();
   $("s2").scrollIntoView({behavior:"smooth",block:"start"});
 }
-function colFilled(k){
-  if(S.map[k]==null)return 0;
-  var c=S.map[k],n=0;
-  S.rows.forEach(function(r){if(String(r[c]||"").trim())n++;});
-  return n/Math.max(1,S.rows.length);
+function colFilledAt(c,rows){
+  if(c==null)return 0;
+  var n=0;
+  rows.forEach(function(r){if(String(r[c]||"").trim())n++;});
+  return n/Math.max(1,rows.length);
+}
+function colFilled(k){return S.map[k]==null?0:colFilledAt(S.map[k],S.rows);}
+function findHeaderCol(name,headers){
+  var n=norm(name);
+  for(var i=0;i<headers.length;i++)if(norm(headers[i])===n)return i;
+  return -1;
 }
 function defaultIdCols(){
   if(colFilled("designation")>0.6)return ["designation"];
@@ -564,7 +696,7 @@ function refresh(){
   recs.ok.forEach(function(r){if(r.start)locs[r.start]=1;if(r.end)locs[r.end]=1;});
   Object.keys(locs).forEach(function(l){if(S.loc[l]==null)S.loc[l]=null;});
   Object.keys(S.loc).forEach(function(l){if(!locs[l])delete S.loc[l];});
-  drawKey();drawRules();drawSuggest();drawLoc();drawIssues();
+  drawKey();drawRules();drawSuggest();drawLoc();drawAreaRules();drawAreaSuggest();drawIssues();
 }
 
 /* ================= issues ================= */
@@ -582,6 +714,12 @@ function buildIssues(){
       d:"No column was named anything obvious, so this one was picked because it reads like footage. Typical value is "+
         f1(med(gl))+" ft. Change it in step 2 if it's the wrong column.",
       act:[{k:"ack",label:"That's the one"},{k:"goto",to:"s2",label:"Pick a different column"}]});
+  }
+  if(S.guessedArea&&S.map.area!=null&&!S.ack["guessarea"]){
+    out.push({lv:"ask",id:"guessarea",
+      t:"Using “"+S.headers[S.map.area]+"” for area/cell grouping — is that right?",
+      d:"No column was named Area, Cell, or Zone, so this only affects the “Keep each area on its own reels” packing mode and the area rules in step 6 — it doesn't change any footage. Pick a different column in step 2, or leave it and use area rules in step 6 to override individual pulls.",
+      act:[{k:"ack",label:"That's fine"},{k:"goto",to:"s2",label:"Pick a different column"}]});
   }
   if(S.map.length==null)
     out.push({lv:"stop",id:"nolencol",t:"No length column picked",
@@ -909,6 +1047,91 @@ function loadLocCSV(t){
   drawLoc();drawIssues();alert("Loaded "+n+" allowances.");
 }
 
+/* ================= area grouping ================= */
+/* Only matters to the "group" packing mode. Defaults to whatever column got
+   mapped to Area/Cell (see the fallback in ingest()). But the split a crew
+   actually cares about -- CE1 vs CE2 vs CE3 -- doesn't always live in that
+   one column; some exports carry it in Start/End Location instead, or only
+   in the Area column while Start/End sit blank. Rather than pick one source,
+   pattern-matching and rule resolution both check the union of the Area
+   column plus Start/End Location, so whichever one actually has the text
+   wins without the user having to know which. Unlike terminations, there's
+   nothing to calibrate here, so a rule takes effect the moment it's added --
+   no separate Apply step. */
+function areaSourceTexts(){
+  var seen={},out=[];
+  records().ok.forEach(function(r){
+    [r.area,r.start,r.end].forEach(function(v){
+      if(!v)return;
+      var u=String(v).toUpperCase();
+      if(seen[u])return;
+      seen[u]=1;out.push(u);
+    });
+  });
+  return out;
+}
+function areaCandTokens(){
+  var texts=areaSourceTexts();
+  if(!texts.length)return [];
+  var hits={};
+  texts.forEach(function(l){
+    var seen={};
+    l.split(/[^A-Z0-9]+/).forEach(function(tok){
+      if(tok.length<2||seen[tok])return;
+      seen[tok]=1;
+      (hits[tok]=hits[tok]||[]).push(l);
+    });
+  });
+  var out=Object.keys(hits).filter(function(k){return hits[k].length>=2;})
+    .map(function(k){return {kw:k,n:hits[k].length,ex:hits[k]};});
+  out=out.filter(function(a){
+    return !S.areaRules.some(function(r){return norm(r.kw)===norm(a.kw);});});
+  out.sort(function(a,b){return b.n-a.n||a.kw.localeCompare(b.kw);});
+  return out.slice(0,24);
+}
+/* Same longest-keyword-wins tie-break as termination rules, checked against
+   the Area column plus both ends of the pull. Falls back to the mapped
+   Area/Cell column's raw value when no rule matches, so defining one rule
+   doesn't blank out every other pull. */
+function resolveArea(rec){
+  if(S.areaRules.length){
+    var hay=norm((rec.area||"")+" "+(rec.start||"")+" "+(rec.end||"")),best=-1,val=null;
+    S.areaRules.forEach(function(r){
+      if(!r.kw)return;
+      var k=norm(r.kw);
+      if(k&&hay.indexOf(k)>-1&&k.length>best){best=k.length;val=r.area||r.kw;}
+    });
+    if(val!=null)return val;
+  }
+  return rec.area||"";
+}
+function drawAreaSuggest(){
+  var ps=areaCandTokens(),el=$("areaSuggest");
+  if(!el)return;
+  if(!ps.length){el.innerHTML='<span class="reel-meta">No repeated patterns found in the location labels.</span>';return;}
+  el.innerHTML=ps.map(function(pp){
+    return '<div class="chip" data-kw="'+esc(pp.kw)+'" title="'+esc(pp.ex.slice(0,8).join(", "))+'">'+
+      esc(pp.kw)+' <span style="opacity:.6">'+pp.n+"</span></div>";}).join("");
+  Array.prototype.forEach.call(el.querySelectorAll("[data-kw]"),function(c){
+    c.onclick=function(){
+      S.areaRules.push({kw:c.dataset.kw,area:c.dataset.kw});
+      drawAreaRules();drawAreaSuggest();};
+  });
+}
+function drawAreaRules(){
+  var el=$("areatbl");if(!el)return;
+  el.innerHTML='<thead><tr><th>If the location contains…</th><th style="width:160px">Area label</th><th style="width:44px"></th></tr></thead><tbody>'+
+    S.areaRules.map(function(r,i){
+      return '<tr><td><input data-ar="'+i+'" data-p="kw" value="'+esc(r.kw)+'"></td>'+
+        '<td><input data-ar="'+i+'" data-p="area" value="'+esc(r.area)+'"></td>'+
+        '<td><button class="ghost sm" data-ard="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
+  Array.prototype.forEach.call(el.querySelectorAll("[data-ar]"),function(inp){
+    inp.onchange=function(){var r=S.areaRules[+inp.dataset.ar];
+      if(inp.dataset.p==="area")r.area=inp.value;else r.kw=inp.value;};});
+  Array.prototype.forEach.call(el.querySelectorAll("[data-ard]"),function(b){
+    b.onclick=function(){S.areaRules.splice(+b.dataset.ard,1);drawAreaRules();drawAreaSuggest();};});
+}
+
 /* ================= conduit ================= */
 /* Trade size shows up as "3/4"", "1-1/4"", "1 1/4"", "1.25"", "#2", whatever
    the shop types. Pull the first number-or-fraction out of the string rather
@@ -952,9 +1175,9 @@ function conduitOf(rec){
    inside it, which is not true of the wire itself. This reuses the run
    length as drawn (no termination allowance, no cut waste), since those are
    wire-only additions. */
-function conduitTakeoff(){
+function conduitTakeoff(recs){
   var groups={};
-  records().ok.forEach(function(r){
+  recs.forEach(function(r){
     var c=conduitOf(r);
     if(!c)return;
     var g=groups[c.key];
@@ -964,9 +1187,9 @@ function conduitTakeoff(){
   return Object.keys(groups).map(function(k){return groups[k];}).sort(function(a,b){
     return a.type.localeCompare(b.type)||a.sizeVal-b.sizeVal;});
 }
-function conduitCSV(){
+function conduitCSV(recs){
   var rows=[["Conduit Type","Trade Size","Total Feet","Sticks (10ft)","Runs"]];
-  conduitTakeoff().forEach(function(g){
+  conduitTakeoff(recs).forEach(function(g){
     rows.push([g.type,g.size,f1(g.ft),Math.ceil(g.ft/10),g.runs]);});
   return csv(rows);
 }
@@ -980,7 +1203,7 @@ function buildPulls(){
     var sA=S.loc[r.start]||0,eA=S.loc[r.end]||0,ex=sA+eA+r.adj;
     var each=r.len+ex+waste;
     for(var p=1;p<=par;p++)
-      out.push({cable:r.cable,len:each,base:r.len,sA:sA,eA:eA,area:r.area,
+      out.push({cable:r.cable,len:each,base:r.len,sA:sA,eA:eA,area:resolveArea(r),
         start:r.start,end:r.end,par:p,ofpar:par,raw:r.raw,src:r.i+2,row:r.row,
         cap:k.reel||defReel});
   });
@@ -1078,7 +1301,7 @@ function render(res){
       h+="</div>";});
   });
 
-  var cd=conduitTakeoff();
+  var cd=conduitTakeoff(records().ok);
   if(cd.length){
     var cdFt=cd.reduce(function(a,b){return a+b.ft;},0);
     h+='<div class="grp"><h3>Conduit takeoff</h3><div class="tot">'+fc(cdFt)+' ft &middot; '+cd.length+' size'+(cd.length>1?"s":"")+'</div></div>';
@@ -1176,6 +1399,7 @@ $("keyExport").onclick=function(){dl("cables.csv",keyCSV());};
 $("keyFileBtn").onclick=function(){$("keyFile").click();};
 $("keyFile").onchange=function(){readFile($("keyFile"),loadKeyCSV);};
 $("ruleAdd").onclick=function(){S.rules.push({kw:"",ft:parseFloat($("defExtra").value)||0});drawRules();};
+$("areaRuleAdd").onclick=function(){S.areaRules.push({kw:"",area:""});drawAreaRules();drawAreaSuggest();};
 $("applyRules").onclick=applyRules;
 $("noExtra").onclick=function(){
   $("defExtra").value=0;
@@ -1188,6 +1412,474 @@ $("run").onclick=run;
 $("dlPull").onclick=function(){if(S.result)dl("pull_sheet.csv",pullCSV());};
 $("dlSpool").onclick=function(){if(S.result)dl("spool_tags.csv",spoolCSV());};
 $("dlReel").onclick=function(){if(S.result)dl("reel_order.csv",reelCSV());};
-$("dlConduit").onclick=function(){if(S.result)dl("conduit_takeoff.csv",conduitCSV());};
+$("dlConduit").onclick=function(){if(S.result)dl("conduit_takeoff.csv",conduitCSV(records().ok));};
 $("print").onclick=function(){window.print();};
+
+/* ================================================================
+   BRANCH -- circuit/conduit-fill takeoff. Same file, own state (SB),
+   own field map (BFIELDS), reuses the shared low-level helpers above
+   (parseCSV, autoMap, pack, conduitOf/conduitTakeoff, reelVal, etc.)
+   instead of duplicating them.
+   ================================================================ */
+var SB={rows:[],headers:[],map:{},key:{},drop:{},ack:{},result:null,defVoltClass:"low"};
+var BFIELDS={
+  length:{label:"Run length",req:true,alias:["conduit length","wire length","measurement","length","run length","meas","dimension","footage","lf","linear feet","total length"]},
+  circuits:{label:"Circuits",req:true,alias:["circuits","circuit","circuit numbers","circuit no","ckt"]},
+  voltage:{label:"Voltage",alias:["voltage","volts","system voltage"]},
+  adjust:{label:"Length adjustment",alias:["length adjustment","length adj","adjustment","adder","extra wire"]},
+  wire:{label:"Wire size",alias:["wire size","conductor size","size","awg"]},
+  ground:{label:"Ground size",alias:["ground size","ground","egc","ground_size"]},
+  ctype:{label:"Conduit type",alias:["conduit type","raceway type","raceway"]},
+  csize:{label:"Conduit size",alias:["conduit size","raceway size","trade size"]},
+  start:{label:"Start location",alias:["start location","start","from","origin","source panel","panel"]},
+  end:{label:"End location",alias:["end location","end","to","destination","load"]},
+  notes:{label:"Notes",alias:["additional notes","notes","comments","remarks"]}
+};
+var LOW_COLORS=["Black","Red","Blue"],HIGH_COLORS=["Brown","Orange","Yellow"];
+var COLOR_ORDER=["Black","Red","Blue","Brown","Orange","Yellow"];
+var WIRE_HEX={Black:"#232323",Red:"#A6362B",Blue:"#2456A6",Brown:"#6B4423",Orange:"#C2701A",Yellow:"#C9A227",White:"#FFFFFF",Green:"#3D6B4A"};
+var WIRE_TEXT={White:"#191C1E",Yellow:"#191C1E"};
+
+/* Splits on top-level commas only -- a parenthesized group like "(25,27)"
+   is one term, not two, since those circuits share a neutral. */
+function splitTerms(s){
+  var out=[],cur="",depth=0;
+  for(var i=0;i<s.length;i++){
+    var c=s[i];
+    if(c==="(")depth++;
+    if(c===")")depth=Math.max(0,depth-1);
+    if(c===","&&depth===0){out.push(cur);cur="";continue;}
+    cur+=c;
+  }
+  if(cur.trim())out.push(cur);
+  return out;
+}
+/* Circuits grammar, confirmed against the user's own examples: a bare
+   number with no "N" = that circuit gets no neutral at all. "12N" = its
+   own individual neutral. A parenthesized group with a trailing "N" --
+   "(25,27)N" -- means those circuits share one neutral. */
+function parseCircuits(raw){
+  var s=String(raw||"").trim();
+  if(!s)return [];
+  return splitTerms(s).map(function(t){
+    t=t.trim();
+    var neutral=/n$/i.test(t);
+    if(neutral)t=t.slice(0,-1).trim();
+    var grp=/^\((.*)\)$/.exec(t);
+    var inner=grp?grp[1]:t;
+    var nums=inner.split(",").map(function(x){return parseInt(x.trim(),10);})
+      .filter(function(n){return isFinite(n)&&n>0;});
+    return {circuits:nums,neutral:neutral,shared:!!grp&&nums.length>1};
+  }).filter(function(t){return t.circuits.length;});
+}
+/* Circuit number -> phase, in pairs, cycling every 6: (1,2)->A, (3,4)->B,
+   (5,6)->C, (7,8)->A again. Confirmed against the user's worked examples:
+   "1N,2n,3n" @ high volt -> Brown,Brown,Orange; "(1,6)N" @ high volt ->
+   Brown+Yellow sharing a neutral. Both match this formula exactly. */
+function phaseColor(n,highVolt){
+  var idx=Math.floor((n-1)/2)%3;
+  return (highVolt?HIGH_COLORS:LOW_COLORS)[idx];
+}
+/* Bluebeam's own High/Low volt picker is the primary signal; a raw voltage
+   number falls back to a 277V threshold (480Y/277 class vs 120/208 class)
+   for jobs that export numbers instead of the picker's text. */
+function isHighVolt(v){
+  var t=norm(v);
+  if(!t)return null;
+  if(t.indexOf("high")>-1)return true;
+  if(t.indexOf("low")>-1)return false;
+  var n=parseFloat(v);
+  if(isFinite(n))return n>=277;
+  return null;
+}
+/* Canonical-order, count-collapsed summary per run -- the JS equivalent of
+   the NormalizePhases function from the user's VBA tool, so this reads the
+   way they're already used to. */
+function describeRun(pulls){
+  var counts={},nIndiv=0,nShared=0;
+  pulls.forEach(function(p){
+    if(p.role==="phase")counts[p.color]=(counts[p.color]||0)+1;
+    else if(p.role==="neutral"){if(p.shared)nShared++;else nIndiv++;}
+  });
+  var parts=COLOR_ORDER.filter(function(c){return counts[c];})
+    .map(function(c){return counts[c]>1?counts[c]+"× "+c:c;});
+  var out=parts.join(", ");
+  var ntags=[];
+  if(nIndiv)ntags.push(nIndiv+" individual N");
+  if(nShared)ntags.push(nShared+" shared N");
+  if(ntags.length)out+=(out?" + ":"")+ntags.join(", ");
+  return out||"—";
+}
+
+function bCell(r,k){var i=SB.map[k];return i==null?"":String(r[i]==null?"":r[i]).trim();}
+/* withLen -- every row with a usable length, whether or not its Circuits
+   parsed. Conduit takeoff cares about the raceway, not the conductors in
+   it, so a spare/empty conduit run still counts toward "how much 3/4 PVC"
+   the same way a row with no Designation still counts on One Line. */
+function bRecords(){
+  if(SB.map.length==null||SB.map.circuits==null)return {ok:[],noLen:[],noCirc:[],withLen:[]};
+  var ok=[],noLen=[],noCirc=[],withLen=[];
+  SB.rows.forEach(function(r,i){
+    if(SB.drop[i])return;
+    var L=parseLen(r[SB.map.length]);
+    var rec={i:i,row:r,len:L,circuitsRaw:bCell(r,"circuits"),voltsRaw:bCell(r,"voltage"),
+      wireRaw:bCell(r,"wire"),groundRaw:bCell(r,"ground"),
+      start:bCell(r,"start"),end:bCell(r,"end"),adj:parseLen(bCell(r,"adjust"))||0,
+      raw:{ctype:bCell(r,"ctype"),csize:bCell(r,"csize")}};
+    if(L==null||L<=0){noLen.push(rec);return;}
+    withLen.push(rec);
+    rec.terms=parseCircuits(rec.circuitsRaw);
+    if(!rec.terms.length){noCirc.push(rec);return;}
+    ok.push(rec);
+  });
+  return {ok:ok,noLen:noLen,noCirc:noCirc,withLen:withLen};
+}
+/* Expands each conduit run into one "pull" per conductor: one per circuit
+   (phase color, Wire Size), one per neutral term (White, Neutral-Size-or-
+   override), one ground per run (Green, Ground Size). All pulls from one
+   row share that row's length plus Length Adjustment -- they're cut off
+   the same physical run, wire-length rules apply the same as One Line. */
+function bBuildPulls(){
+  var waste=parseFloat($("bWaste").value)||0;
+  var neutOverride=$("bNeutralSize")?$("bNeutralSize").value.trim():"";
+  var out=[];
+  bRecords().ok.forEach(function(r){
+    var hv=isHighVolt(r.voltsRaw);
+    if(hv==null)hv=SB.defVoltClass==="high";
+    var each=r.len+r.adj+waste;
+    r.terms.forEach(function(term){
+      term.circuits.forEach(function(cnum){
+        out.push({run:r,color:phaseColor(cnum,hv),size:r.wireRaw||"?",role:"phase",circuit:cnum,len:each,base:r.len});
+      });
+      if(term.neutral)
+        out.push({run:r,color:"White",size:neutOverride||r.wireRaw||"?",role:"neutral",
+          circuits:term.circuits.slice(),shared:term.shared,len:each,base:r.len});
+    });
+    out.push({run:r,color:"Green",size:r.groundRaw||"?",role:"ground",len:each,base:r.len});
+  });
+  return out;
+}
+function bIdentities(){
+  var s={};
+  bBuildPulls().forEach(function(p){s[p.color+" "+p.size]=1;});
+  return Object.keys(s).sort();
+}
+
+/* ---- ingest / issues ---- */
+function bIngest(text,name){
+  var rows=parseCSV(text);
+  if(rows.length<2){alert("No data rows in that file.");return;}
+  SB.headers=rows[0].map(function(h){return String(h).trim();});
+  SB.rows=rows.slice(1);
+  SB.map=autoMap(SB.headers,BFIELDS);
+  SB.guessedLength=false;
+  if(SB.map.length==null){
+    var g=guessLengthCol(SB.map,SB.headers,SB.rows);
+    if(g>-1){SB.map.length=g;SB.guessedLength=true;}
+  }
+  /* Branch exports often carry a "Start Location"/"End Location" header
+     that's just never filled in for conduit-only rows -- the real panel
+     name lives in Layer or Source Panel instead (confirmed against a real
+     export). So this checks fill rate, not just whether the field mapped
+     at all, and overrides a mapped-but-empty column same as an unmapped
+     one. */
+  SB.guessedLoc=false;
+  var locFallback=findHeaderCol("layer",SB.headers);
+  if(locFallback<0)locFallback=findHeaderCol("source panel",SB.headers);
+  if(locFallback>-1){
+    if(SB.map.start==null||colFilledAt(SB.map.start,SB.rows)<0.2){SB.map.start=locFallback;SB.guessedLoc=true;}
+    if(SB.map.end==null||colFilledAt(SB.map.end,SB.rows)<0.2){SB.map.end=locFallback;SB.guessedLoc=true;}
+  }
+  SB.drop={};SB.ack={};SB.key={};SB.defVoltClass="low";
+  $("bFileinfo").textContent=(name?name+" — ":"")+SB.rows.length+" rows, "+SB.headers.length+" columns";
+  ["bS2","bS3","bS4","bS6"].forEach(function(i){$(i).classList.remove("hidden");});
+  drawBMaps();bRefresh();
+  $("bS2").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function drawBMaps(){
+  $("bMaps").innerHTML=Object.keys(BFIELDS).map(function(k){
+    var f=BFIELDS[k],sel=SB.map[k];
+    var opts='<option value="-1">— not used —</option>'+SB.headers.map(function(h,i){
+      return '<option value="'+i+'"'+(sel===i?" selected":"")+">"+esc(h||("Column "+(i+1)))+"</option>";}).join("");
+    var st=sel!=null&&sel>-1?'<span class="found">matched</span>':(f.req?'<span class="miss">required</span>':"optional");
+    return '<div class="map"><label>'+esc(f.label)+" &middot; "+st+'</label><select data-fld="'+k+'">'+opts+"</select></div>";
+  }).join("");
+  Array.prototype.forEach.call($("bMaps").querySelectorAll("select"),function(s){
+    s.onchange=function(){var v=parseInt(s.value,10);
+      if(v<0)delete SB.map[s.dataset.fld]; else SB.map[s.dataset.fld]=v;
+      drawBMaps();bRefresh();};
+  });
+}
+function bRefresh(){
+  var ids=bIdentities();
+  ids.forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};});
+  drawBKey();drawBIssues();
+}
+function buildBIssues(){
+  var out=[],R=bRecords();
+  if(SB.guessedLength&&SB.map.length!=null&&!SB.ack["guesslen"]){
+    var gl=R.ok.map(function(r){return r.len;});
+    out.push({lv:"ask",id:"guesslen",
+      t:"Using “"+SB.headers[SB.map.length]+"” as the run length — is that right?",
+      d:"No column was named anything obvious, so this one was picked because it reads like footage. Typical value is "+f1(med(gl))+" ft. Change it in step 2 if it's the wrong column.",
+      act:[{k:"ack",label:"That's the one"},{k:"goto",to:"bS2",label:"Pick a different column"}]});
+  }
+  if(SB.guessedLoc&&!SB.ack["guessloc"]){
+    out.push({lv:"ask",id:"guessloc",
+      t:"Using “"+SB.headers[SB.map.start]+"” for from/to — is that right?",
+      d:"Start/End Location was blank or missing, so this fell back to Layer or Source Panel. Pick different columns in step 2 if it's wrong.",
+      act:[{k:"ack",label:"That's fine"},{k:"goto",to:"bS2",label:"Pick different columns"}]});
+  }
+  if(SB.map.length==null)
+    out.push({lv:"stop",id:"nolencol",t:"No length column picked",d:"Nothing can be spooled without one. Pick it in step 2."});
+  if(SB.map.circuits==null)
+    out.push({lv:"stop",id:"nocirccol",t:"No Circuits column picked",d:"Nothing can be colored without knowing which circuits are in each run. Pick it in step 2."});
+  if(SB.map.length!=null&&SB.map.circuits!=null&&!R.ok.length)
+    out.push({lv:"stop",id:"norows",t:"No rows have both a usable length and readable circuits",
+      d:"Check the length and Circuits columns in step 2 — every row came back blank or unparseable on one or the other."});
+
+  if(R.noLen.length)
+    out.push({lv:"ask",id:"nolen",t:R.noLen.length+" row"+(R.noLen.length>1?"s have":" has")+" no length",
+      d:"Excluded from the count already.",
+      ex:R.noLen.slice(0,4).map(function(r){return "row "+(r.i+2)+"  "+(r.start||r.end||"?");}),
+      act:[{k:"ack",label:"That's expected"}]});
+
+  if(R.noCirc.length)
+    out.push({lv:"ask",id:"nocirc",t:R.noCirc.length+" row"+(R.noCirc.length>1?"s have":" has")+" no readable circuits",
+      d:"Excluded from the count already — blank Circuits field, or text that doesn't match the number or (group)N pattern.",
+      ex:R.noCirc.slice(0,4).map(function(r){return "row "+(r.i+2)+'  "'+r.circuitsRaw+'"';})});
+
+  var ambig=R.ok.filter(function(r){return isHighVolt(r.voltsRaw)==null;});
+  if(ambig.length&&!SB.ack["voltclass"])
+    out.push({lv:"ask",id:"voltclass",t:ambig.length+" run"+(ambig.length>1?"s don't":" doesn't")+" say High or Low volt",
+      d:"Assuming "+(SB.defVoltClass==="high"?"High":"Low")+" volt for these, which decides the color palette (brown/orange/yellow vs black/red/blue).",
+      ex:ambig.slice(0,4).map(function(r){return "row "+(r.i+2)+'  "'+(r.voltsRaw||"(blank)")+'"';}),
+      act:[{k:"voltlow",label:"Assume Low volt"},{k:"volthigh",label:"Assume High volt"}]});
+
+  return out.filter(function(x){return !SB.ack[x.id];});
+}
+function drawBIssues(){
+  var iss=buildBIssues();
+  var stop=iss.filter(function(x){return x.lv==="stop";}).length;
+  $("bS3step").className="step"+(stop?" hot":"");
+  $("bRun").disabled=stop>0;
+  $("bRunWhy").textContent=stop?"Fix the blocking item in step 3 first.":"";
+  if(!iss.length){
+    $("bIssues").innerHTML='<div class="iss clean"><h6>Nothing looks wrong.</h6>'+
+      '<p>'+bRecords().ok.length+" runs read cleanly.</p></div>";
+    return;
+  }
+  $("bIssues").innerHTML=iss.map(function(x,n){
+    return '<div class="iss '+x.lv+'"><h6>'+esc(x.t)+"</h6><p>"+esc(x.d)+"</p>"+
+      (x.ex&&x.ex.length?'<div class="ex">'+x.ex.map(esc).join("<br>")+"</div>":"")+
+      (x.act?'<div class="act">'+x.act.map(function(a,ai){
+        return '<button class="ghost sm" data-iss="'+n+'" data-act="'+ai+'">'+esc(a.label)+"</button>";}).join("")+"</div>":"")+
+      "</div>";
+  }).join("");
+  Array.prototype.forEach.call($("bIssues").querySelectorAll("[data-iss]"),function(b){
+    b.onclick=function(){bDoAct(iss[+b.dataset.iss],iss[+b.dataset.iss].act[+b.dataset.act]);};
+  });
+}
+function bDoAct(iss,a){
+  if(a.k==="ack")SB.ack[iss.id]=1;
+  else if(a.k==="voltlow"){SB.defVoltClass="low";SB.ack["voltclass"]=1;}
+  else if(a.k==="volthigh"){SB.defVoltClass="high";SB.ack["voltclass"]=1;}
+  else if(a.k==="goto"){$(a.to).scrollIntoView({behavior:"smooth",block:"start"});return;}
+  bRefresh();
+}
+
+/* ---- reels table (step 4) ---- */
+function drawBKey(){
+  var ids=bIdentities();
+  if(!ids.length){$("bKeytbl").innerHTML="";return;}
+  var counts={};bBuildPulls().forEach(function(p){var id=p.color+" "+p.size;counts[id]=(counts[id]||0)+1;});
+  $("bKeytbl").innerHTML='<thead><tr><th>Color / Size</th><th style="width:64px">Pulls</th>'+
+    '<th style="width:120px">Reel ft</th></tr></thead><tbody>'+
+    ids.map(function(id){var v=SB.key[id]||{reel:null};
+      return "<tr><td><b>"+esc(id)+"</b></td>"+
+        '<td class="num">'+(counts[id]||0)+"</td>"+
+        '<td><input class="num" type="number" min="1" max="5000" list="putups" data-c="'+esc(id)+
+        '" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"></td></tr>';
+    }).join("")+"</tbody>";
+  Array.prototype.forEach.call($("bKeytbl").querySelectorAll("[data-c]"),function(el){
+    el.onchange=function(){var m=reelVal(el.value);SB.key[el.dataset.c].reel=m;if(m!=null)el.value=m;};
+  });
+}
+
+/* ---- pack / render ---- */
+var BNOTES={ffd:"Biggest pulls first, each into the first reel with room. Fewest reels.",
+  seq:"Fills in takeoff order and never returns to a reel it left."};
+function bRun(){
+  var pulls=bBuildPulls();
+  if(!pulls.length){alert("No usable rows.");return;}
+  var mode=$("bMode").value,hold=parseFloat($("bHold").value)||0;
+  var defReel=reelVal($("bDefReel").value)||2500;
+  var byC={};pulls.forEach(function(p){var id=p.color+" "+p.size;(byC[id]=byC[id]||[]).push(p);});
+  var res={groups:[],over:[],pulls:pulls,totPulls:pulls.length,totFt:0,totReels:0,naive:0};
+  Object.keys(byC).sort().forEach(function(id){
+    var items=byC[id],color=items[0].color,size=items[0].size;
+    var capFull=(SB.key[id]&&SB.key[id].reel)||defReel,cap=Math.max(1,capFull-hold);
+    var ft=items.reduce(function(a,b){return a+b.len;},0);
+    res.totFt+=ft;res.naive+=Math.ceil(ft/capFull);
+    var r=pack(items,cap,mode);
+    r.over.forEach(function(o){res.over.push(o);});
+    r.bins.forEach(function(b,i){
+      b.id=id.replace(/[^A-Za-z0-9]+/g,"-").toUpperCase()+"-R"+String(i+1).padStart(2,"0");
+      b.idx=i+1;b.of=r.bins.length;b.cap=capFull;b.tail=capFull-b.used;});
+    res.totReels+=r.bins.length;
+    res.groups.push({id:id,color:color,size:size,reels:r.bins,ft:ft,pulls:items.length,cap:capFull});
+  });
+  var seq=0;
+  res.groups.forEach(function(x){x.reels.forEach(function(b){b.no=++seq;});});
+  SB.result=res;bRender(res);
+}
+function bRunGroups(pulls){
+  var runs={};
+  pulls.forEach(function(p){var key=p.run.i;(runs[key]=runs[key]||{run:p.run,pulls:[]}).pulls.push(p);});
+  return Object.keys(runs).map(function(k){return runs[k];}).sort(function(a,b){return a.run.i-b.run.i;});
+}
+function bRender(res){
+  var o=$("bOut"),h='<div class="step">Order sheet</div><h2>Reel order</h2>';
+  h+='<div class="stats">'+
+    '<div class="stat"><b>'+res.totReels+'</b><span>Reels to order</span></div>'+
+    '<div class="stat"><b>'+fc(res.totFt)+'</b><span>Total feet</span></div>'+
+    '<div class="stat"><b>'+res.totPulls+'</b><span>Individual pulls</span></div>'+
+    '<div class="stat'+(res.over.length?" bad":"")+'"><b>'+res.over.length+'</b><span>Won’t fit a reel</span></div></div>';
+  var diff=res.totReels-res.naive;
+  if(diff>0)h+='<div class="iss stop"><h6>'+diff+" more reel"+(diff>1?"s":"")+
+    " than total feet ÷ reel length</h6><p>A pull can’t be spliced across two reels, so a footage total always under-counts.</p></div>";
+
+  var runList=bRunGroups(res.pulls);
+  h+='<div class="grp"><h3>Run schedule</h3><div class="tot">'+runList.length+" run"+(runList.length>1?"s":"")+'</div></div>';
+  h+='<div class="scroll"><table><thead><tr><th>Run</th><th>From</th><th>To</th><th>Conduit</th>'+
+    '<th style="width:80px">Length</th><th>Circuits</th><th>Colors</th><th>Wire</th><th>Ground</th></tr></thead><tbody>'+
+    runList.map(function(x,i){
+      var r=x.run,cd=conduitOf(r);
+      return '<tr><td>Run '+String(i+1).padStart(3,"0")+'</td><td>'+esc(r.start||"—")+'</td><td>'+
+        esc(r.end||r.start||"—")+'</td><td>'+(cd?esc(cd.type)+" "+esc(cd.size):"—")+
+        '</td><td class="num">'+f1(r.len)+'</td><td>'+esc(r.circuitsRaw)+'</td><td>'+esc(describeRun(x.pulls))+
+        '</td><td>'+esc(r.wireRaw||"—")+'</td><td>'+esc(r.groundRaw||"—")+"</td></tr>";
+    }).join("")+"</tbody></table></div>";
+
+  res.groups.forEach(function(x){
+    h+='<div class="desig"><div class="desig-hd"><h4>'+esc(x.id)+'</h4><div class="lbl">'+
+      f1(x.cap)+" ft reels &middot; "+x.pulls+" pulls</div></div>";
+    x.reels.forEach(function(b){
+      h+='<div class="reel"><div class="reel-hd"><div class="reel-id">'+
+        '<span class="spoolno">Spool '+String(b.no).padStart(3,"0")+"</span>"+
+        esc(b.id)+' <span class="reel-meta">'+b.idx+" of "+b.of+'</span></div><div class="reel-meta">'+
+        f1(b.used)+" / "+f1(b.cap)+" ft &middot; "+f1(b.tail)+" ft tail &middot; "+
+        Math.round(b.used/b.cap*100)+"%</div></div>";
+      h+='<div class="bar">'+b.items.map(function(p,i){var w=p.len/b.cap*100;
+        return '<div class="seg" style="width:'+w+"%;background:"+(WIRE_HEX[p.color]||"#666")+
+          ";color:"+(WIRE_TEXT[p.color]||"#fff")+";opacity:"+(i%2?.85:1)+
+          (p.color==="White"?";box-shadow:inset 0 0 0 1px rgba(25,28,30,.4)":"")+
+          '" title="'+esc((p.run.start||"?")+" → "+(p.run.end||p.run.start||"?"))+" "+f1(p.len)+' ft">'+
+          (w>9?f1(p.len):"")+"</div>";
+      }).join("")+"</div>";
+      h+='<div class="reel-pulls">'+b.items.map(function(p){
+        return "<span>"+esc(p.run.start||"?")+"→"+esc(p.run.end||p.run.start||"?")+" <b>"+f1(p.len)+"</b></span>";
+      }).join("")+"</div></div>";
+    });
+    h+="</div>";
+  });
+
+  var cd=conduitTakeoff(bRecords().withLen);
+  if(cd.length){
+    var cdFt=cd.reduce(function(a,b){return a+b.ft;},0);
+    h+='<div class="grp"><h3>Conduit takeoff</h3><div class="tot">'+fc(cdFt)+' ft &middot; '+cd.length+' size'+(cd.length>1?"s":"")+'</div></div>';
+    h+='<div class="scroll"><table><thead><tr><th>Type</th><th>Trade size</th>'+
+      '<th style="width:110px">Total feet</th><th style="width:110px">Sticks (10\')</th>'+
+      '<th style="width:80px">Runs</th></tr></thead><tbody>'+
+      cd.map(function(g){
+        return "<tr><td>"+esc(g.type)+"</td><td>"+esc(g.size)+'</td><td class="num">'+
+          fc(g.ft)+'</td><td class="num">'+Math.ceil(g.ft/10)+'</td><td class="num">'+g.runs+"</td></tr>";
+      }).join("")+"</tbody></table></div>";
+  }
+
+  o.innerHTML=h;o.classList.remove("hidden");
+  $("bOutfoot").classList.remove("hidden");
+  o.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ---- CSV exports ---- */
+function bRunsCSV(pulls){
+  var runList=bRunGroups(pulls);
+  var rows=[["Run #","From","To","Conduit Type","Conduit Size","Length ft","Circuits","Colors","Wire Size","Ground Size","Source row"]];
+  runList.forEach(function(x,i){
+    var r=x.run,cd=conduitOf(r);
+    rows.push(["Run "+String(i+1).padStart(3,"0"),r.start||"",r.end||r.start||"",cd?cd.type:"",cd?cd.size:"",
+      f1(r.len),r.circuitsRaw,describeRun(x.pulls),r.wireRaw||"",r.groundRaw||"",r.i+2]);
+  });
+  return csv(rows);
+}
+function bPullCSV(){
+  var rows=[["Spool #","Reel ID","Color","Size","Role","Run From","Run To","Cut length ft","Reel ft","Source row"]];
+  function line(no,id,cap,p){
+    return [no,id,p.color,p.size,p.role,p.run.start||"",p.run.end||p.run.start||"",f1(p.len),f1(cap),p.run.i+2];
+  }
+  SB.result.groups.forEach(function(x){x.reels.forEach(function(b){
+    b.items.forEach(function(p){rows.push(line(b.no,b.id,b.cap,p));});});});
+  SB.result.over.forEach(function(p){rows.push(line("","OVERSIZE",0,p));});
+  return csv(rows);
+}
+function bSpoolCSV(){
+  var rows=[["Spool #","Reel ID","Color","Size","Reel length ft","Feet used","Feet of tail","Pulls on reel"]];
+  SB.result.groups.forEach(function(x){x.reels.forEach(function(b){
+    rows.push([b.no,b.id,x.color,x.size,f1(b.cap),f1(b.used),f1(b.tail),b.items.length]);});});
+  return csv(rows);
+}
+function bReelCSV(){
+  var rows=[["Color","Size","Reel length ft","Reels to order","Spool numbers","Pulls","Feet used","Feet of tail"]];
+  SB.result.groups.forEach(function(x){
+    var nos=x.reels.map(function(b){return b.no;});
+    rows.push([x.color,x.size,f1(x.cap),x.reels.length,
+      nos.length?(nos.length>1?nos[0]+"-"+nos[nos.length-1]:String(nos[0])):"",x.pulls,
+      f1(x.reels.reduce(function(a,b){return a+b.used;},0)),
+      f1(x.reels.reduce(function(a,b){return a+b.tail;},0))]);
+  });
+  return csv(rows);
+}
+
+var BRANCH_SAMPLE=
+"Subject,Page Index,Measurement,Measurement Unit,Layer,Name,Source Panel,Circuits,Voltage,Additional Notes,Box Size,Conduit Type,Conduit Size,Wire Size,Ground Size,Start Location,Start Extra Wire,End Location,End Extra Wire,Length Adjustment,Prefab,Order Date,Conduit Length\n"+
+"Conduit,1,85.7,ft,COLO1-CE1-PNL01,,COLO1-CE1-PNL01,\"1N,2N,3N\",Low Volt,,,PVC,3/4\",# 10,# 10,,,,,,,,85.7\n"+
+"Conduit,2,76.1,ft,CE2-PNL01,,CE2-PNL01,\"(1,6)N\",High Volt,,,PVC,1\",# 10,# 10,,,,,,,,76.1\n"+
+"Conduit,3,85.3,ft,CE3-PNL01,,COLO1-CE3-PNL02,\"1N,(25,27)N\",Low Volt,,,PVC,1\",# 10,# 10,,,,,,,,85.3\n"+
+"Conduit,4,86.1,ft,CE4-PNL01,,CE4-PNL01,\"7,8N\",High Volt,,,PVC,3/4\",# 12,# 12,,,,,,,,86.1\n"+
+"Conduit,5,52.4,ft,CE1-PNL02,,CE1-PNL02,\"9N,11N\",Low Volt,,,PVC,3/4\",# 10,# 10,,,,,,,,52.4\n"+
+"Conduit,6,44.6,ft,CE2-PNL02,,CE2-PNL02,2N,,,,PVC,3/4\",# 10,# 10,,,,,,,,44.6\n"+
+"Conduit,7,60.0,ft,CE3-PNL02,,CE3-PNL02,,Low Volt,,,PVC,1\",,,,,,,,,,60.0\n";
+
+/* ---- wiring ---- */
+Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
+  t.onclick=function(){
+    var tool=t.dataset.tool;
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(x){x.classList.toggle("on",x===t);});
+    $("toolOne").classList.toggle("hidden",tool!=="one");
+    $("toolBranch").classList.toggle("hidden",tool!=="branch");
+    $("toolSub").textContent=tool==="one"?"Takeoff CSV → packed reel order":"Branch takeoff CSV → conduit-fill spool order";
+  };
+});
+$("bDrop").onclick=function(){$("bFile").click();};
+$("bDrop").onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();$("bFile").click();}};
+$("bDrop").ondragover=function(e){e.preventDefault();$("bDrop").classList.add("hot");};
+$("bDrop").ondragleave=function(){$("bDrop").classList.remove("hot");};
+$("bDrop").ondrop=function(e){e.preventDefault();$("bDrop").classList.remove("hot");
+  var f=e.dataTransfer.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(){bIngest(r.result,f.name);};r.readAsText(f);};
+$("bFile").onchange=function(){readFile($("bFile"),bIngest);};
+$("bDemo").onclick=function(){bIngest(BRANCH_SAMPLE,"sample");};
+$("bDefReel").onchange=function(){var v=reelVal($("bDefReel").value);if(v!=null)$("bDefReel").value=v;};
+$("bBulkAll").onclick=function(){var v=reelVal($("bDefReel").value);if(!v)return;
+  bIdentities().forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};SB.key[id].reel=v;});drawBKey();};
+$("bMode").onchange=function(){$("bModeNote").textContent=BNOTES[$("bMode").value];};
+$("bModeNote").textContent=BNOTES.ffd;
+$("bRun").onclick=bRun;
+$("bDlRuns").onclick=function(){if(SB.result)dl("run_schedule.csv",bRunsCSV(SB.result.pulls));};
+$("bDlPull").onclick=function(){if(SB.result)dl("branch_pull_sheet.csv",bPullCSV());};
+$("bDlSpool").onclick=function(){if(SB.result)dl("branch_spool_tags.csv",bSpoolCSV());};
+$("bDlReel").onclick=function(){if(SB.result)dl("branch_reel_order.csv",bReelCSV());};
+$("bDlConduit").onclick=function(){if(SB.result)dl("branch_conduit_takeoff.csv",conduitCSV(bRecords().withLen));};
+$("bPrint").onclick=function(){window.print();};
 </script>
