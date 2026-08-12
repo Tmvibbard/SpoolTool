@@ -247,7 +247,18 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
   <div class="row">
     <button id="noExtra" class="ghost">Already in the takeoff lengths — set every location to 0</button>
   </div>
-  <div class="scroll" style="max-height:300px;overflow-y:auto;margin-top:14px"><table id="loctbl"></table></div>
+  <h5>Start Locations</h5>
+  <div class="row" style="margin-top:0;margin-bottom:8px">
+    <div class="fld w"><label for="bulkStart">Set every Start Location to (ft)</label><input id="bulkStart" class="num" type="number" min="0"></div>
+    <button id="bulkStartBtn" class="ghost">Apply</button>
+  </div>
+  <div class="scroll" style="max-height:260px;overflow-y:auto;margin-bottom:18px"><table id="locStartTbl"></table></div>
+  <h5>End Locations</h5>
+  <div class="row" style="margin-top:0;margin-bottom:8px">
+    <div class="fld w"><label for="bulkEnd">Set every End Location to (ft)</label><input id="bulkEnd" class="num" type="number" min="0"></div>
+    <button id="bulkEndBtn" class="ghost">Apply</button>
+  </div>
+  <div class="scroll" style="max-height:260px;overflow-y:auto"><table id="locEndTbl"></table></div>
 </section>
 
 <section id="s6" class="hidden noprint">
@@ -368,7 +379,18 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
   <div class="row">
     <button id="bNoExtra" class="ghost">Already in the takeoff lengths — set every location to 0</button>
   </div>
-  <div class="scroll" style="max-height:300px;overflow-y:auto;margin-top:14px"><table id="bLoctbl"></table></div>
+  <h5>Start Locations</h5>
+  <div class="row" style="margin-top:0;margin-bottom:8px">
+    <div class="fld w"><label for="bBulkStart">Set every Start Location to (ft)</label><input id="bBulkStart" class="num" type="number" min="0"></div>
+    <button id="bBulkStartBtn" class="ghost">Apply</button>
+  </div>
+  <div class="scroll" style="max-height:260px;overflow-y:auto;margin-bottom:18px"><table id="bLocStartTbl"></table></div>
+  <h5>End Locations</h5>
+  <div class="row" style="margin-top:0;margin-bottom:8px">
+    <div class="fld w"><label for="bBulkEnd">Set every End Location to (ft)</label><input id="bBulkEnd" class="num" type="number" min="0"></div>
+    <button id="bBulkEndBtn" class="ghost">Apply</button>
+  </div>
+  <div class="scroll" style="max-height:260px;overflow-y:auto"><table id="bLocEndTbl"></table></div>
 </section>
 
 <section id="bS6" class="hidden noprint">
@@ -770,6 +792,20 @@ function resolveNeutral(rec){
   });
   return hit?{has:true,color:hit.color,size:hit.size}:{has:false};
 }
+/* Same live-count purpose as Branch's bNeutralRuleMatches -- how many runs
+   a rule's own conditions touch, shown next to the rule so a loose filter
+   is obvious before it silently pulls in more runs than intended. */
+function neutralRuleMatches(r){
+  if(!r.size||!r.color||(!r.cable&&!r.start&&!r.end))return 0;
+  var n=0;
+  records().ok.forEach(function(rec){
+    if(r.cable){var kc=norm(r.cable);if(!kc||norm(rec.cable||"").indexOf(kc)<0)return;}
+    if(r.start){var ks=norm(r.start);if(!ks||norm(rec.start||"").indexOf(ks)<0)return;}
+    if(r.end){var ke=norm(r.end);if(!ke||norm(rec.end||"").indexOf(ke)<0)return;}
+    n++;
+  });
+  return n;
+}
 function neutralIdentities(){
   var s={};
   records().ok.forEach(function(r){var n=resolveNeutral(r);if(n.has)s[n.color+" "+n.size]=1;});
@@ -1051,14 +1087,17 @@ function drawKey(){
 function drawNeutralRules(){
   var el=$("neutralTbl");if(!el)return;
   el.innerHTML='<thead><tr><th>Designation/Cable contains</th><th>Start Location contains</th>'+
-    '<th>End Location contains</th><th style="width:90px">Color</th><th style="width:110px">Size</th><th style="width:44px"></th></tr></thead><tbody>'+
+    '<th>End Location contains</th><th style="width:90px">Color</th><th style="width:110px">Size</th>'+
+    '<th style="width:90px">Matches</th><th style="width:44px"></th></tr></thead><tbody>'+
     S.neutralRules.map(function(r,i){
       var copts=["White","Grey"].map(function(c){return '<option value="'+c+'"'+(r.color===c?" selected":"")+">"+c+"</option>";}).join("");
+      var n=neutralRuleMatches(r);
       return '<tr><td><input data-nlr="'+i+'" data-p="cable" value="'+esc(r.cable)+'" placeholder="e.g. Z3A-TC"></td>'+
         '<td><input data-nlr="'+i+'" data-p="start" value="'+esc(r.start)+'" placeholder="e.g. MSB"></td>'+
         '<td><input data-nlr="'+i+'" data-p="end" value="'+esc(r.end)+'" placeholder="e.g. XFM05"></td>'+
         '<td><select data-nlr="'+i+'" data-p="color">'+copts+'</select></td>'+
         '<td><input data-nlr="'+i+'" data-p="size" value="'+esc(r.size)+'" placeholder="e.g. #10"></td>'+
+        '<td class="num reel-meta">'+n+" run"+(n===1?"":"s")+'</td>'+
         '<td><button class="ghost sm" data-nlrd="'+i+'">&times;</button></td></tr>';
     }).join("")+"</tbody>";
   Array.prototype.forEach.call(el.querySelectorAll("[data-nlr]"),function(inp){
@@ -1206,16 +1245,31 @@ function showRuleConflictModal(next,conflicts){
     closeModal();drawLoc();drawSuggest();drawIssues();
   };
 }
-function drawLoc(){
-  var ls=Object.keys(S.loc).sort();
-  if(!ls.length){$("loctbl").innerHTML="";return;}
-  $("loctbl").innerHTML='<thead><tr><th>Location</th><th style="width:140px">Extra wire ft</th></tr></thead><tbody>'+
+/* Which locations act as a Start on at least one run, vs an End -- a
+   location used as both shows up in both lists, sharing the same S.loc
+   value (it's still one physical point with one termination allowance,
+   same as before this split; only the display and the bulk-set shortcuts
+   are per-role). */
+function locRoles(){
+  var starts={},ends={};
+  records().ok.forEach(function(r){if(r.start)starts[r.start]=1;if(r.end)ends[r.end]=1;});
+  return {starts:starts,ends:ends};
+}
+function drawLocTable(elId,ls){
+  var el=$(elId);if(!el)return;
+  if(!ls.length){el.innerHTML="";return;}
+  el.innerHTML='<thead><tr><th>Location</th><th style="width:140px">Extra wire ft</th></tr></thead><tbody>'+
     ls.map(function(l){var v=S.loc[l];
       return "<tr><td>"+esc(l)+'</td><td><input class="num" type="number" min="0" step="1" data-loc="'+esc(l)+
         '" value="'+(v==null?"":v)+'" placeholder="not set"></td></tr>';}).join("")+"</tbody>";
-  Array.prototype.forEach.call($("loctbl").querySelectorAll("[data-loc]"),function(el){
-    el.onchange=function(){var n=parseFloat(el.value);
-      S.loc[el.dataset.loc]=isFinite(n)&&n>=0?n:null;drawLoc();drawIssues();};});
+  Array.prototype.forEach.call(el.querySelectorAll("[data-loc]"),function(inp){
+    inp.onchange=function(){var n=parseFloat(inp.value);
+      S.loc[inp.dataset.loc]=isFinite(n)&&n>=0?n:null;drawLoc();drawIssues();};});
+}
+function drawLoc(){
+  var roles=locRoles();
+  drawLocTable("locStartTbl",Object.keys(roles.starts).sort());
+  drawLocTable("locEndTbl",Object.keys(roles.ends).sort());
 }
 function locCSV(){var rows=[["Location","Extra wire ft"]];
   Object.keys(S.loc).sort().forEach(function(l){rows.push([l,S.loc[l]==null?"":S.loc[l]]);});return csv(rows);}
@@ -1605,6 +1659,10 @@ $("noExtra").onclick=function(){
 $("locExport").onclick=function(){dl("allowances.csv",locCSV());};
 $("locFileBtn").onclick=function(){$("locFile").click();};
 $("locFile").onchange=function(){readFile($("locFile"),loadLocCSV);};
+$("bulkStartBtn").onclick=function(){var v=parseFloat($("bulkStart").value);if(!isFinite(v)||v<0)return;
+  Object.keys(locRoles().starts).forEach(function(l){S.loc[l]=v;});drawLoc();drawSuggest();drawIssues();};
+$("bulkEndBtn").onclick=function(){var v=parseFloat($("bulkEnd").value);if(!isFinite(v)||v<0)return;
+  Object.keys(locRoles().ends).forEach(function(l){S.loc[l]=v;});drawLoc();drawSuggest();drawIssues();};
 $("run").onclick=run;
 $("dlPull").onclick=function(){if(S.result)dl("pull_sheet.csv",pullCSV());};
 $("dlSpool").onclick=function(){if(S.result)dl("spool_tags.csv",spoolCSV());};
@@ -1778,6 +1836,36 @@ function resolveNeutralSize(rec,term){
   if(def)return def;
   return rec.wireRaw||"?";
 }
+/* Counts how many neutral terms a rule's own conditions touch, independent
+   of whether another rule wins the tie-break on any of them -- shown live
+   next to each rule so a filter that's looser than it looks (a bare "2" in
+   a location field matches almost any label with a 2 in it, and a circuit
+   number by itself matches that circuit on every panel in the job, not just
+   the one you're thinking of) is obvious immediately instead of only
+   showing up as a surprising total in the Color/Size table below. */
+function bNeutralRuleMatches(r){
+  if(!r.size||(!r.start&&!r.end&&!r.circuit))return 0;
+  var n=0;
+  bRecords().ok.forEach(function(rec){
+    rec.terms.forEach(function(term){
+      if(!term.neutral)return;
+      if(r.circuit){
+        var num=parseFloat(r.circuit);
+        if(!isFinite(num)||term.circuits.indexOf(num)<0)return;
+      }
+      if(r.start){
+        var ks=norm(r.start);
+        if(!ks||norm(rec.start||"").indexOf(ks)<0)return;
+      }
+      if(r.end){
+        var ke=norm(r.end);
+        if(!ke||norm(rec.end||"").indexOf(ke)<0)return;
+      }
+      n++;
+    });
+  });
+  return n;
+}
 /* Expands each conduit run into one "pull" per conductor: one per circuit
    (phase color, Wire Size), one per neutral term (White, sized by
    resolveNeutralSize), one ground per run (Green, Ground Size). All pulls
@@ -1867,12 +1955,15 @@ function bRefresh(){
 function drawBNeutralRules(){
   var el=$("bNeutralTbl");if(!el)return;
   el.innerHTML='<thead><tr><th>Start Location contains</th><th>End Location contains</th>'+
-    '<th style="width:100px">Circuit #</th><th style="width:120px">Neutral size</th><th style="width:44px"></th></tr></thead><tbody>'+
+    '<th style="width:100px">Circuit #</th><th style="width:120px">Neutral size</th>'+
+    '<th style="width:90px">Matches</th><th style="width:44px"></th></tr></thead><tbody>'+
     SB.neutralRules.map(function(r,i){
+      var n=bNeutralRuleMatches(r);
       return '<tr><td><input data-nr="'+i+'" data-p="start" placeholder="e.g. PNL02" value="'+esc(r.start)+'"></td>'+
         '<td><input data-nr="'+i+'" data-p="end" placeholder="e.g. PNL02" value="'+esc(r.end)+'"></td>'+
         '<td><input data-nr="'+i+'" data-p="circuit" type="number" placeholder="e.g. 27" value="'+esc(r.circuit)+'"></td>'+
         '<td><input data-nr="'+i+'" data-p="size" value="'+esc(r.size)+'"></td>'+
+        '<td class="num reel-meta">'+n+" pull"+(n===1?"":"s")+'</td>'+
         '<td><button class="ghost sm" data-nrd="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
   Array.prototype.forEach.call(el.querySelectorAll("[data-nr]"),function(inp){
     inp.onchange=function(){var r=SB.neutralRules[+inp.dataset.nr];r[inp.dataset.p]=inp.value;bRefresh();};});
@@ -1978,9 +2069,17 @@ function showBRuleConflictModal(next,conflicts){
     closeModal();drawBLoc();drawBSuggest();drawBIssues();
   };
 }
-function drawBLoc(){
-  var el=$("bLoctbl");if(!el)return;
-  var ls=Object.keys(SB.loc).sort();
+/* Same split as One Line's locRoles/drawLocTable -- a location used as
+   both a start and an end shares one SB.loc value (still one physical
+   point, one termination allowance); only the display and the bulk-set
+   shortcuts are per-role. */
+function bLocRoles(){
+  var starts={},ends={};
+  bRecords().withLen.forEach(function(r){if(r.start)starts[r.start]=1;if(r.end)ends[r.end]=1;});
+  return {starts:starts,ends:ends};
+}
+function drawBLocTable(elId,ls){
+  var el=$(elId);if(!el)return;
   if(!ls.length){el.innerHTML="";return;}
   el.innerHTML='<thead><tr><th>Location</th><th style="width:140px">Extra wire ft</th></tr></thead><tbody>'+
     ls.map(function(l){var v=SB.loc[l];
@@ -1989,6 +2088,11 @@ function drawBLoc(){
   Array.prototype.forEach.call(el.querySelectorAll("[data-bloc]"),function(inp){
     inp.onchange=function(){var n=parseFloat(inp.value);
       SB.loc[inp.dataset.bloc]=isFinite(n)&&n>=0?n:null;drawBLoc();drawBIssues();};});
+}
+function drawBLoc(){
+  var roles=bLocRoles();
+  drawBLocTable("bLocStartTbl",Object.keys(roles.starts).sort());
+  drawBLocTable("bLocEndTbl",Object.keys(roles.ends).sort());
 }
 function bLocCSV(){var rows=[["Location","Extra wire ft"]];
   Object.keys(SB.loc).sort().forEach(function(l){rows.push([l,SB.loc[l]==null?"":SB.loc[l]]);});return csv(rows);}
@@ -2306,6 +2410,10 @@ $("bNoExtra").onclick=function(){
 $("bLocExport").onclick=function(){dl("branch_allowances.csv",bLocCSV());};
 $("bLocFileBtn").onclick=function(){$("bLocFile").click();};
 $("bLocFile").onchange=function(){readFile($("bLocFile"),loadBLocCSV);};
+$("bBulkStartBtn").onclick=function(){var v=parseFloat($("bBulkStart").value);if(!isFinite(v)||v<0)return;
+  Object.keys(bLocRoles().starts).forEach(function(l){SB.loc[l]=v;});drawBLoc();drawBSuggest();drawBIssues();};
+$("bBulkEndBtn").onclick=function(){var v=parseFloat($("bBulkEnd").value);if(!isFinite(v)||v<0)return;
+  Object.keys(bLocRoles().ends).forEach(function(l){SB.loc[l]=v;});drawBLoc();drawBSuggest();drawBIssues();};
 $("bMode").onchange=function(){$("bModeNote").textContent=BNOTES[$("bMode").value];};
 $("bModeNote").textContent=BNOTES.ffd;
 $("bRun").onclick=bRun;
