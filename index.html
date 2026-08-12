@@ -185,7 +185,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <button id="demo" class="ghost">Load sample</button>
     <span id="fileinfo" class="reel-meta"></span>
   </div>
-  <input type="file" id="file" accept=".csv,.txt" class="hidden">
+  <input type="file" id="file" accept=".csv,.txt,.xlsx,.xls" class="hidden">
 </section>
 
 <section id="s2" class="hidden noprint">
@@ -329,7 +329,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <button id="bDemo" class="ghost">Load sample</button>
     <span id="bFileinfo" class="reel-meta"></span>
   </div>
-  <input type="file" id="bFile" accept=".csv,.txt" class="hidden">
+  <input type="file" id="bFile" accept=".csv,.txt,.xlsx,.xls" class="hidden">
 </section>
 
 <section id="bS2" class="hidden noprint">
@@ -597,7 +597,16 @@ function dl(n,t){var b=new Blob([t],{type:"text/csv;charset=utf-8"}),u=URL.creat
   setTimeout(function(){URL.revokeObjectURL(u);},1500);}
 function pick(h,names){for(var i=0;i<h.length;i++){var n=norm(h[i]);
   for(var j=0;j<names.length;j++)if(n===names[j]||n.indexOf(names[j])===0)return i;}return -1;}
+/* .xlsx/.xls aren't text -- reading one with readAsText produces binary
+   garbage that fails to parse with a confusing error. Catch it by
+   extension up front and say exactly how to fix it, rather than parsing
+   an Excel library into this file just to read a format Excel itself can
+   re-save as CSV in two clicks. */
+function isExcelFile(name){return /\.(xlsx|xlsm|xltx|xltm|xls|xlsb)$/i.test(String(name||""));}
+function warnExcelFile(name){
+  alert('"'+name+'" is an Excel file, not a CSV.\n\nIn Excel: File → Save As → choose "CSV (Comma delimited)" → Save, then drop that file here instead.');}
 function readFile(inp,fn){var f=inp.files[0];if(!f)return;
+  if(isExcelFile(f.name)){warnExcelFile(f.name);inp.value="";return;}
   var r=new FileReader();r.onload=function(){fn(r.result,f.name);};r.readAsText(f);inp.value="";}
 
 /* ================= ingest ================= */
@@ -1702,6 +1711,7 @@ $("drop").ondragover=function(e){e.preventDefault();$("drop").classList.add("hot
 $("drop").ondragleave=function(){$("drop").classList.remove("hot");};
 $("drop").ondrop=function(e){e.preventDefault();$("drop").classList.remove("hot");
   var f=e.dataTransfer.files[0];if(!f)return;
+  if(isExcelFile(f.name)){warnExcelFile(f.name);return;}
   var r=new FileReader();r.onload=function(){ingest(r.result,f.name);};r.readAsText(f);};
 $("file").onchange=function(){readFile($("file"),ingest);};
 $("demo").onclick=function(){ingest(SAMPLE,"sample");};
@@ -2499,6 +2509,7 @@ $("bDrop").ondragover=function(e){e.preventDefault();$("bDrop").classList.add("h
 $("bDrop").ondragleave=function(){$("bDrop").classList.remove("hot");};
 $("bDrop").ondrop=function(e){e.preventDefault();$("bDrop").classList.remove("hot");
   var f=e.dataTransfer.files[0];if(!f)return;
+  if(isExcelFile(f.name)){warnExcelFile(f.name);return;}
   var r=new FileReader();r.onload=function(){bIngest(r.result,f.name);};r.readAsText(f);};
 $("bFile").onchange=function(){readFile($("bFile"),bIngest);};
 $("bDemo").onclick=function(){bIngest(BRANCH_SAMPLE,"sample");};
