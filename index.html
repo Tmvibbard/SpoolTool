@@ -221,7 +221,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <option value="3000"><option value="4000"><option value="5000"></datalist>
   <div class="scroll" style="margin-top:14px"><table id="keytbl"></table></div>
   <h5>Neutral</h5>
-  <p class="hint" style="margin-bottom:9px">Most trunk/feeder runs don't carry a neutral, so this is opt-in &mdash; add a rule for the runs that do, matched against Designation/Cable, Start Location, or End Location, most specific match wins. Unmatched runs get no neutral. Color is White or Grey, whichever this job actually uses &mdash; White for low volt (120/208), Grey for high volt (480Y/277) is standard practice, but you pick it per rule.</p>
+  <p class="hint" style="margin-bottom:9px">Most trunk/feeder runs don't carry a neutral, so this is opt-in &mdash; add a rule for the runs that do. Fill in Designation/Cable, Start Location, and/or End Location on a rule; all filled fields must match (leave one blank to not filter on it), so combining two or three pins a rule down to one exact run when any single one of them would match several. More fields, or longer/more specific text, wins over a broader rule. Unmatched runs get no neutral. Color is White or Grey, whichever this job actually uses &mdash; White for low volt (120/208), Grey for high volt (480Y/277) is standard practice, but you pick it per rule.</p>
   <div class="scroll" style="margin-bottom:10px"><table id="neutralTbl"></table></div>
   <div class="row" style="margin-top:0"><button id="neutralRuleAdd" class="ghost sm">Add rule</button></div>
 </section>
@@ -338,7 +338,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <button id="bBulkAll" class="ghost">Set every color to this</button>
   </div>
   <h5>Neutral conductor size</h5>
-  <p class="hint" style="margin-bottom:9px">There's no separate Neutral Size column, so neutrals default to each run's own Wire Size. Add a rule to size the neutral differently on a run's Start Location, End Location, or one specific circuit number &mdash; a circuit-number match always wins, otherwise the longest text match wins &mdash; or set a default to use one size everywhere.</p>
+  <p class="hint" style="margin-bottom:9px">There's no separate Neutral Size column, so neutrals default to each run's own Wire Size. Only resizes a neutral that's already there &mdash; a circuit only gets a neutral pull at all if its Circuits text has a trailing N (<code>27N</code> or inside a shared group like <code>(25,27)N</code>); a bare number with no N means Bluebeam says that circuit has no neutral, and no rule here changes that. Fill in Start Location, End Location, and/or a circuit number on a rule to size it &mdash; combine two or three to pin down one exact run or circuit, since a location alone can match several. More specific wins: a circuit number beats location text, and among location matches the longer one wins. Leave a field blank to not filter on it, or set a default to use one size everywhere.</p>
   <div class="scroll" style="margin-bottom:10px"><table id="bNeutralTbl"></table></div>
   <div class="row" style="margin-top:0">
     <button id="bNeutralRuleAdd" class="ghost sm">Add rule</button>
@@ -750,15 +750,23 @@ function records(){
    wins. Unlike termination rules there's no separate Apply step, same
    reasoning as area rules: nothing needs calibrating first. Color is
    picked directly per rule (White/Grey) since One Line has no voltage
-   class to derive it from the way Branch does. */
-var ONE_NEUTRAL_FIELDS=[{v:"cable",label:"Designation / Cable"},{v:"start",label:"Start Location"},{v:"end",label:"End Location"}];
+   class to derive it from the way Branch does. A rule can combine
+   Designation/Cable, Start Location, and End Location -- all three, any
+   two, or just one, matched with AND -- since a Designation or a location
+   alone often matches more than one run; adding more fields narrows a rule
+   down to one exact run. Specificity for the tie-break is the combined
+   length of whatever text is required, so a rule pinning down more fields
+   (or longer, more specific text) wins over a broader one. */
 function resolveNeutral(rec){
   var best=-1,hit=null;
   S.neutralRules.forEach(function(r){
-    if(!r.val||!r.size||!r.color)return;
-    var text=r.field==="end"?rec.end:(r.field==="start"?rec.start:rec.cable);
-    var k=norm(r.val);
-    if(k&&norm(text||"").indexOf(k)>-1&&k.length>best){best=k.length;hit=r;}
+    if(!r.size||!r.color)return;
+    if(!r.cable&&!r.start&&!r.end)return;
+    var score=0;
+    if(r.cable){var kc=norm(r.cable);if(!kc||norm(rec.cable||"").indexOf(kc)<0)return;score+=kc.length;}
+    if(r.start){var ks=norm(r.start);if(!ks||norm(rec.start||"").indexOf(ks)<0)return;score+=ks.length;}
+    if(r.end){var ke=norm(r.end);if(!ke||norm(rec.end||"").indexOf(ke)<0)return;score+=ke.length;}
+    if(score>best){best=score;hit=r;}
   });
   return hit?{has:true,color:hit.color,size:hit.size}:{has:false};
 }
@@ -1042,13 +1050,13 @@ function drawKey(){
 }
 function drawNeutralRules(){
   var el=$("neutralTbl");if(!el)return;
-  el.innerHTML='<thead><tr><th style="width:150px">If this run’s…</th><th>…contains</th>'+
-    '<th style="width:90px">Color</th><th style="width:110px">Size</th><th style="width:44px"></th></tr></thead><tbody>'+
+  el.innerHTML='<thead><tr><th>Designation/Cable contains</th><th>Start Location contains</th>'+
+    '<th>End Location contains</th><th style="width:90px">Color</th><th style="width:110px">Size</th><th style="width:44px"></th></tr></thead><tbody>'+
     S.neutralRules.map(function(r,i){
-      var fopts=ONE_NEUTRAL_FIELDS.map(function(f){return '<option value="'+f.v+'"'+(r.field===f.v?" selected":"")+">"+f.label+"</option>";}).join("");
       var copts=["White","Grey"].map(function(c){return '<option value="'+c+'"'+(r.color===c?" selected":"")+">"+c+"</option>";}).join("");
-      return '<tr><td><select data-nlr="'+i+'" data-p="field">'+fopts+'</select></td>'+
-        '<td><input data-nlr="'+i+'" data-p="val" value="'+esc(r.val)+'" placeholder="e.g. Z3A-TC"></td>'+
+      return '<tr><td><input data-nlr="'+i+'" data-p="cable" value="'+esc(r.cable)+'" placeholder="e.g. Z3A-TC"></td>'+
+        '<td><input data-nlr="'+i+'" data-p="start" value="'+esc(r.start)+'" placeholder="e.g. MSB"></td>'+
+        '<td><input data-nlr="'+i+'" data-p="end" value="'+esc(r.end)+'" placeholder="e.g. XFM05"></td>'+
         '<td><select data-nlr="'+i+'" data-p="color">'+copts+'</select></td>'+
         '<td><input data-nlr="'+i+'" data-p="size" value="'+esc(r.size)+'" placeholder="e.g. #10"></td>'+
         '<td><button class="ghost sm" data-nlrd="'+i+'">&times;</button></td></tr>';
@@ -1587,7 +1595,7 @@ $("keyExport").onclick=function(){dl("cables.csv",keyCSV());};
 $("keyFileBtn").onclick=function(){$("keyFile").click();};
 $("keyFile").onchange=function(){readFile($("keyFile"),loadKeyCSV);};
 $("ruleAdd").onclick=function(){S.rules.push({kw:"",ft:parseFloat($("defExtra").value)||0});drawRules();};
-$("neutralRuleAdd").onclick=function(){S.neutralRules.push({field:"cable",val:"",color:"White",size:""});refresh();};
+$("neutralRuleAdd").onclick=function(){S.neutralRules.push({cable:"",start:"",end:"",color:"White",size:""});refresh();};
 $("areaRuleAdd").onclick=function(){S.areaRules.push({kw:"",area:""});drawAreaRules();drawAreaSuggest();};
 $("applyRules").onclick=applyRules;
 $("noExtra").onclick=function(){
@@ -1732,29 +1740,40 @@ function bRecords(){
   });
   return {ok:ok,noLen:noLen,noCirc:noCirc,withLen:withLen};
 }
-/* Each rule targets one field -- Start Location, End Location, or one
-   specific circuit number -- rather than a keyword matched against a blend
-   of them, so a rule can size the neutral on one circuit within a run that
-   shares several (e.g. "(25,27)N") without also catching the other. A
-   circuit-number match is inherently the most specific thing a rule can
-   say, so it always wins over a Start/End text match; among text rules the
-   longest match wins, same as termination/area rules. Falls back to the
+/* Each rule can combine Start Location, End Location, and Circuit Number --
+   all three, any two, or just one -- matched with AND, not a keyword blend
+   or a single picked field. A Start Location alone often isn't enough to
+   pin down one specific run (a panel can feed several conduits with
+   different circuits), so a rule can add End Location and/or the exact
+   circuit number until it identifies exactly one pull. Specificity for the
+   tie-break is the sum of what's actually pinned down: a circuit number is
+   worth the most (it can only ever match one term), then the combined
+   length of whatever Start/End text is also required. Falls back to the
    Default field, then the run's own Wire Size. */
 function resolveNeutralSize(rec,term){
-  var circVal=null,textVal=null,textLen=-1;
+  var best=-1,val=null;
   SB.neutralRules.forEach(function(r){
-    if(!r.val)return;
-    if(r.field==="circuit"){
-      var num=parseFloat(r.val);
-      if(term&&isFinite(num)&&term.circuits.indexOf(num)>-1&&r.size)circVal=r.size;
-    }else{
-      var text=r.field==="end"?rec.end:rec.start;
-      var k=norm(r.val);
-      if(k&&norm(text||"").indexOf(k)>-1&&k.length>textLen&&r.size){textLen=k.length;textVal=r.size;}
+    if(!r.size)return;
+    if(!r.start&&!r.end&&!r.circuit)return;
+    var score=0;
+    if(r.circuit){
+      var num=parseFloat(r.circuit);
+      if(!term||!isFinite(num)||term.circuits.indexOf(num)<0)return;
+      score+=1000;
     }
+    if(r.start){
+      var ks=norm(r.start);
+      if(!ks||norm(rec.start||"").indexOf(ks)<0)return;
+      score+=ks.length;
+    }
+    if(r.end){
+      var ke=norm(r.end);
+      if(!ke||norm(rec.end||"").indexOf(ke)<0)return;
+      score+=ke.length;
+    }
+    if(score>best){best=score;val=r.size;}
   });
-  if(circVal)return circVal;
-  if(textVal)return textVal;
+  if(val)return val;
   var def=$("bNeutralDefault")?$("bNeutralDefault").value.trim():"";
   if(def)return def;
   return rec.wireRaw||"?";
@@ -1845,23 +1864,18 @@ function bRefresh(){
   Object.keys(SB.loc).forEach(function(l){if(!locs[l])delete SB.loc[l];});
   drawBKey();drawBNeutralRules();drawBRules();drawBSuggest();drawBLoc();drawBIssues();
 }
-var NEUTRAL_FIELDS=[{v:"start",label:"Start Location"},{v:"end",label:"End Location"},{v:"circuit",label:"Circuit Number"}];
 function drawBNeutralRules(){
   var el=$("bNeutralTbl");if(!el)return;
-  el.innerHTML='<thead><tr><th style="width:160px">If this run’s…</th><th>…contains / equals</th>'+
-    '<th style="width:140px">Neutral size</th><th style="width:44px"></th></tr></thead><tbody>'+
+  el.innerHTML='<thead><tr><th>Start Location contains</th><th>End Location contains</th>'+
+    '<th style="width:100px">Circuit #</th><th style="width:120px">Neutral size</th><th style="width:44px"></th></tr></thead><tbody>'+
     SB.neutralRules.map(function(r,i){
-      var opts=NEUTRAL_FIELDS.map(function(f){return '<option value="'+f.v+'"'+(r.field===f.v?" selected":"")+">"+f.label+"</option>";}).join("");
-      var isCirc=r.field==="circuit";
-      return '<tr><td><select data-nr="'+i+'" data-p="field">'+opts+'</select></td>'+
-        '<td><input data-nr="'+i+'" data-p="val" type="'+(isCirc?"number":"text")+'" placeholder="'+
-        (isCirc?"e.g. 27":"e.g. PNL02")+'" value="'+esc(r.val)+'"></td>'+
+      return '<tr><td><input data-nr="'+i+'" data-p="start" placeholder="e.g. PNL02" value="'+esc(r.start)+'"></td>'+
+        '<td><input data-nr="'+i+'" data-p="end" placeholder="e.g. PNL02" value="'+esc(r.end)+'"></td>'+
+        '<td><input data-nr="'+i+'" data-p="circuit" type="number" placeholder="e.g. 27" value="'+esc(r.circuit)+'"></td>'+
         '<td><input data-nr="'+i+'" data-p="size" value="'+esc(r.size)+'"></td>'+
         '<td><button class="ghost sm" data-nrd="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
   Array.prototype.forEach.call(el.querySelectorAll("[data-nr]"),function(inp){
-    inp.onchange=function(){var r=SB.neutralRules[+inp.dataset.nr];
-      r[inp.dataset.p]=inp.value;
-      if(inp.dataset.p==="field")drawBNeutralRules();};});
+    inp.onchange=function(){var r=SB.neutralRules[+inp.dataset.nr];r[inp.dataset.p]=inp.value;};});
   Array.prototype.forEach.call(el.querySelectorAll("[data-nrd]"),function(b){
     b.onclick=function(){SB.neutralRules.splice(+b.dataset.nrd,1);drawBNeutralRules();};});
 }
@@ -2282,7 +2296,7 @@ $("bDemo").onclick=function(){bIngest(BRANCH_SAMPLE,"sample");};
 $("bDefReel").onchange=function(){var v=reelVal($("bDefReel").value);if(v!=null)$("bDefReel").value=v;};
 $("bBulkAll").onclick=function(){var v=reelVal($("bDefReel").value);if(!v)return;
   bIdentities().forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};SB.key[id].reel=v;});drawBKey();};
-$("bNeutralRuleAdd").onclick=function(){SB.neutralRules.push({field:"start",val:"",size:""});drawBNeutralRules();};
+$("bNeutralRuleAdd").onclick=function(){SB.neutralRules.push({start:"",end:"",circuit:"",size:""});drawBNeutralRules();};
 $("bRuleAdd").onclick=function(){SB.rules.push({kw:"",ft:parseFloat($("bDefExtra").value)||0});drawBRules();};
 $("bApplyRules").onclick=applyBRules;
 $("bNoExtra").onclick=function(){
