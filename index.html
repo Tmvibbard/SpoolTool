@@ -1875,9 +1875,9 @@ function drawBNeutralRules(){
         '<td><input data-nr="'+i+'" data-p="size" value="'+esc(r.size)+'"></td>'+
         '<td><button class="ghost sm" data-nrd="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
   Array.prototype.forEach.call(el.querySelectorAll("[data-nr]"),function(inp){
-    inp.onchange=function(){var r=SB.neutralRules[+inp.dataset.nr];r[inp.dataset.p]=inp.value;};});
+    inp.onchange=function(){var r=SB.neutralRules[+inp.dataset.nr];r[inp.dataset.p]=inp.value;bRefresh();};});
   Array.prototype.forEach.call(el.querySelectorAll("[data-nrd]"),function(b){
-    b.onclick=function(){SB.neutralRules.splice(+b.dataset.nrd,1);drawBNeutralRules();};});
+    b.onclick=function(){SB.neutralRules.splice(+b.dataset.nrd,1);bRefresh();};});
 }
 
 /* ================= terminations (same shape as One Line's, matched
@@ -2296,7 +2296,7 @@ $("bDemo").onclick=function(){bIngest(BRANCH_SAMPLE,"sample");};
 $("bDefReel").onchange=function(){var v=reelVal($("bDefReel").value);if(v!=null)$("bDefReel").value=v;};
 $("bBulkAll").onclick=function(){var v=reelVal($("bDefReel").value);if(!v)return;
   bIdentities().forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};SB.key[id].reel=v;});drawBKey();};
-$("bNeutralRuleAdd").onclick=function(){SB.neutralRules.push({start:"",end:"",circuit:"",size:""});drawBNeutralRules();};
+$("bNeutralRuleAdd").onclick=function(){SB.neutralRules.push({start:"",end:"",circuit:"",size:""});bRefresh();};
 $("bRuleAdd").onclick=function(){SB.rules.push({kw:"",ft:parseFloat($("bDefExtra").value)||0});drawBRules();};
 $("bApplyRules").onclick=applyBRules;
 $("bNoExtra").onclick=function(){
