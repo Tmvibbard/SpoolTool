@@ -220,6 +220,10 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <option value="500"><option value="750"><option value="1000"><option value="1500"><option value="2500">
     <option value="3000"><option value="4000"><option value="5000"></datalist>
   <div class="scroll" style="margin-top:14px"><table id="keytbl"></table></div>
+  <h5>Neutral</h5>
+  <p class="hint" style="margin-bottom:9px">Most trunk/feeder runs don't carry a neutral, so this is opt-in &mdash; add a rule for the runs that do, matched against Designation/Cable, Start Location, or End Location, most specific match wins. Unmatched runs get no neutral. Color is White or Grey, whichever this job actually uses &mdash; White for low volt (120/208), Grey for high volt (480Y/277) is standard practice, but you pick it per rule.</p>
+  <div class="scroll" style="margin-bottom:10px"><table id="neutralTbl"></table></div>
+  <div class="row" style="margin-top:0"><button id="neutralRuleAdd" class="ghost sm">Add rule</button></div>
 </section>
 
 <section id="s5" class="hidden noprint">
@@ -334,7 +338,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <button id="bBulkAll" class="ghost">Set every color to this</button>
   </div>
   <h5>Neutral conductor size</h5>
-  <p class="hint" style="margin-bottom:9px">There's no separate Neutral Size column, so neutrals default to each run's own Wire Size. Add a rule to size the neutral differently on specific runs &mdash; matched against that run's From, To, and Circuits text, most specific match wins &mdash; or set a default to use one size everywhere.</p>
+  <p class="hint" style="margin-bottom:9px">There's no separate Neutral Size column, so neutrals default to each run's own Wire Size. Add a rule to size the neutral differently on a run's Start Location, End Location, or one specific circuit number &mdash; a circuit-number match always wins, otherwise the longest text match wins &mdash; or set a default to use one size everywhere.</p>
   <div class="scroll" style="margin-bottom:10px"><table id="bNeutralTbl"></table></div>
   <div class="row" style="margin-top:0">
     <button id="bNeutralRuleAdd" class="ghost sm">Add rule</button>
@@ -343,8 +347,32 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
   <div class="scroll" style="margin-top:14px"><table id="bKeytbl"></table></div>
 </section>
 
+<section id="bS5" class="hidden noprint">
+  <div class="step">5 &middot; Terminations</div>
+  <h2>Extra wire by location</h2>
+  <p class="hint">Every value found in the start and end location columns, listed once. A pull gets its start allowance plus its end allowance.</p>
+  <h5>Patterns found in your labels</h5>
+  <p class="hint" style="margin-bottom:9px">Read straight off this job's location names &mdash; whatever naming your crew uses. The number is how many locations share it. Click one to turn it into a rule.</p>
+  <div class="chips" id="bSuggest" style="margin-bottom:16px"></div>
+  <h5>Rules</h5>
+  <p class="hint" style="margin-bottom:9px">The most specific match wins, so a broad rule and a narrow one can sit together in any order. Anything unmatched gets the default.</p>
+  <div class="scroll" style="margin-bottom:10px"><table id="bRuletbl"></table></div>
+  <div class="row" style="margin-top:0">
+    <button id="bRuleAdd" class="ghost sm">Add rule</button>
+    <div class="fld w"><label for="bDefExtra">Default (ft)</label><input id="bDefExtra" class="num" type="number" value="15" min="0"></div>
+    <button id="bApplyRules">Apply</button>
+    <button id="bLocExport" class="ghost">Export</button>
+    <button id="bLocFileBtn" class="ghost">Load</button>
+    <input type="file" id="bLocFile" accept=".csv,.txt" class="hidden">
+  </div>
+  <div class="row">
+    <button id="bNoExtra" class="ghost">Already in the takeoff lengths — set every location to 0</button>
+  </div>
+  <div class="scroll" style="max-height:300px;overflow-y:auto;margin-top:14px"><table id="bLoctbl"></table></div>
+</section>
+
 <section id="bS6" class="hidden noprint">
-  <div class="step">5 &middot; Packing</div>
+  <div class="step">6 &middot; Packing</div>
   <h2>How to fill the reels</h2>
   <div class="grid">
     <div class="fld"><label for="bMode">Strategy</label>
@@ -572,7 +600,7 @@ function ingest(text,name){
     if(best!=null){S.map.area=best;S.guessedArea=true;}
   }
   S.drop={};S.merge={};S.ack={};
-  S.rules=[];S.areaRules=[];
+  S.rules=[];S.areaRules=[];S.neutralRules=[];
   S.idCols=defaultIdCols();
   $("fileinfo").textContent=(name?name+" — ":"")+S.rows.length+" rows, "+S.headers.length+" columns";
   ["s2","s3","s4","s5","s6"].forEach(function(i){$(i).classList.remove("hidden");});
@@ -716,18 +744,44 @@ function records(){
   });
   return {ok:ok,noLen:noLen,noCable:noCable};
 }
-function cables(){var s={};records().ok.forEach(function(r){s[r.cable]=1;});return Object.keys(s).sort();}
+/* Neutral rules are opt-in, not opt-out -- most trunk/feeder runs don't
+   carry a neutral, so a run only gets one if a rule actually matches it
+   (Designation/Cable, Start Location, or End Location), longest match
+   wins. Unlike termination rules there's no separate Apply step, same
+   reasoning as area rules: nothing needs calibrating first. Color is
+   picked directly per rule (White/Grey) since One Line has no voltage
+   class to derive it from the way Branch does. */
+var ONE_NEUTRAL_FIELDS=[{v:"cable",label:"Designation / Cable"},{v:"start",label:"Start Location"},{v:"end",label:"End Location"}];
+function resolveNeutral(rec){
+  var best=-1,hit=null;
+  S.neutralRules.forEach(function(r){
+    if(!r.val||!r.size||!r.color)return;
+    var text=r.field==="end"?rec.end:(r.field==="start"?rec.start:rec.cable);
+    var k=norm(r.val);
+    if(k&&norm(text||"").indexOf(k)>-1&&k.length>best){best=k.length;hit=r;}
+  });
+  return hit?{has:true,color:hit.color,size:hit.size}:{has:false};
+}
+function neutralIdentities(){
+  var s={};
+  records().ok.forEach(function(r){var n=resolveNeutral(r);if(n.has)s[n.color+" "+n.size]=1;});
+  return Object.keys(s);
+}
+function cables(){var s={};records().ok.forEach(function(r){s[r.cable]=1;});
+  neutralIdentities().forEach(function(n){s[n]=1;});return Object.keys(s).sort();}
 
 function refresh(){
-  var cbs=cables();
+  var cbs=cables(),neut={};neutralIdentities().forEach(function(n){neut[n]=1;});
   cbs.forEach(function(c){
-    if(!S.key[c])S.key[c]={par:1,reel:null,colors:"",note:"",assumedPar:true,assumedReel:true};
+    if(!S.key[c])S.key[c]=neut[c]?
+      {par:1,reel:null,colors:c.split(" ")[0],note:"Neutral",assumedPar:true,assumedReel:true}:
+      {par:1,reel:null,colors:"",note:"",assumedPar:true,assumedReel:true};
   });
   var recs=records(),locs={};
   recs.ok.forEach(function(r){if(r.start)locs[r.start]=1;if(r.end)locs[r.end]=1;});
   Object.keys(locs).forEach(function(l){if(S.loc[l]==null)S.loc[l]=null;});
   Object.keys(S.loc).forEach(function(l){if(!locs[l])delete S.loc[l];});
-  drawKey();drawRules();drawSuggest();drawLoc();drawAreaRules();drawAreaSuggest();drawIssues();
+  drawKey();drawRules();drawSuggest();drawLoc();drawAreaRules();drawAreaSuggest();drawNeutralRules();drawIssues();
 }
 
 /* ================= issues ================= */
@@ -964,13 +1018,16 @@ function drawKey(){
   var cbs=cables();
   if(!cbs.length){$("keytbl").innerHTML="";return;}
   var counts={};records().ok.forEach(function(r){counts[r.cable]=(counts[r.cable]||0)+1;});
+  var neut={};records().ok.forEach(function(r){var n=resolveNeutral(r);
+    if(n.has){var id=n.color+" "+n.size;neut[id]=(neut[id]||0)+1;}});
   $("keytbl").innerHTML='<thead><tr><th>Cable</th><th style="width:64px">Runs</th>'+
     '<th style="width:88px">Sets per run</th><th style="width:112px">Reel ft</th>'+
     '<th>Colors (free text)</th><th>Note</th></tr></thead><tbody>'+
-    cbs.map(function(c){var v=S.key[c];
+    cbs.map(function(c){var v=S.key[c],isN=neut[c]!=null;
       return "<tr><td><b>"+esc(c)+"</b></td>"+
-        '<td class="num">'+(counts[c]||0)+"</td>"+
-        '<td><input class="num" type="number" min="1" step="1" data-c="'+esc(c)+'" data-p="par" value="'+v.par+'"></td>'+
+        '<td class="num">'+(isN?neut[c]:(counts[c]||0))+"</td>"+
+        (isN?'<td class="num reel-meta" title="Follows the phase run’s own parallel count">1 / set</td>'
+          :'<td><input class="num" type="number" min="1" step="1" data-c="'+esc(c)+'" data-p="par" value="'+v.par+'"></td>')+
         '<td><input class="num" type="number" min="1" max="5000" list="putups" data-c="'+esc(c)+'" data-p="reel" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"></td>'+
         '<td><input data-c="'+esc(c)+'" data-p="colors" value="'+esc(v.colors)+'" placeholder="e.g. brown, orange, yellow"></td>'+
         '<td><input data-c="'+esc(c)+'" data-p="note" value="'+esc(v.note)+'" placeholder="connector, label, anything"></td></tr>';
@@ -981,6 +1038,26 @@ function drawKey(){
       else if(p==="reel"){var m=reelVal(el.value);o.reel=m;o.assumedReel=!o.reel;if(m!=null)el.value=m;}
       else o[p]=el.value;
       refresh();};
+  });
+}
+function drawNeutralRules(){
+  var el=$("neutralTbl");if(!el)return;
+  el.innerHTML='<thead><tr><th style="width:150px">If this run’s…</th><th>…contains</th>'+
+    '<th style="width:90px">Color</th><th style="width:110px">Size</th><th style="width:44px"></th></tr></thead><tbody>'+
+    S.neutralRules.map(function(r,i){
+      var fopts=ONE_NEUTRAL_FIELDS.map(function(f){return '<option value="'+f.v+'"'+(r.field===f.v?" selected":"")+">"+f.label+"</option>";}).join("");
+      var copts=["White","Grey"].map(function(c){return '<option value="'+c+'"'+(r.color===c?" selected":"")+">"+c+"</option>";}).join("");
+      return '<tr><td><select data-nlr="'+i+'" data-p="field">'+fopts+'</select></td>'+
+        '<td><input data-nlr="'+i+'" data-p="val" value="'+esc(r.val)+'" placeholder="e.g. Z3A-TC"></td>'+
+        '<td><select data-nlr="'+i+'" data-p="color">'+copts+'</select></td>'+
+        '<td><input data-nlr="'+i+'" data-p="size" value="'+esc(r.size)+'" placeholder="e.g. #10"></td>'+
+        '<td><button class="ghost sm" data-nlrd="'+i+'">&times;</button></td></tr>';
+    }).join("")+"</tbody>";
+  Array.prototype.forEach.call(el.querySelectorAll("[data-nlr]"),function(inp){
+    inp.onchange=function(){var r=S.neutralRules[+inp.dataset.nlr];r[inp.dataset.p]=inp.value;refresh();};
+  });
+  Array.prototype.forEach.call(el.querySelectorAll("[data-nlrd]"),function(b){
+    b.onclick=function(){S.neutralRules.splice(+b.dataset.nlrd,1);refresh();};
   });
 }
 function keyCSV(){
@@ -1079,18 +1156,47 @@ function drawRules(){
 }
 /* Most specific rule wins: the longest keyword that appears in the label.
    That way a broad "ACC" rule and a narrow "ACC MAIN" rule can coexist
-   without you having to think about what order they sit in. */
+   without you having to think about what order they sit in. When a label
+   matches more than one rule with genuinely different footage, the longer
+   keyword silently wins and the other is thrown away -- that's the behavior
+   we want, but it deserves a look before it happens rather than never being
+   visible, so it's surfaced as a review popup before Apply commits. */
 function applyRules(){
   var d=parseFloat($("defExtra").value);if(!isFinite(d))d=0;
+  var next={},conflicts=[];
   Object.keys(S.loc).forEach(function(l){
-    var v=d,n=norm(l),best=-1;
+    var v=d,n=norm(l),best=-1,winner=null,matches=[];
     S.rules.forEach(function(r){
       if(!r.kw)return;
       var k=norm(r.kw);
-      if(k&&n.indexOf(k)>-1&&k.length>best){best=k.length;v=r.ft;}
+      if(k&&n.indexOf(k)>-1){
+        matches.push(r);
+        if(k.length>best){best=k.length;winner=r;v=r.ft;}
+      }
     });
-    S.loc[l]=v;});
+    next[l]=v;
+    var losers=matches.filter(function(m){return m!==winner&&m.ft!==winner.ft;});
+    if(losers.length)conflicts.push({loc:l,winner:winner,losers:losers});
+  });
+  if(conflicts.length){showRuleConflictModal(next,conflicts);return;}
+  Object.keys(next).forEach(function(l){S.loc[l]=next[l];});
   drawLoc();drawSuggest();drawIssues();
+}
+function showRuleConflictModal(next,conflicts){
+  var body='<p class="hint">These locations match more than one rule. The more specific keyword wins and the other is ignored there -- worth a look before this overwrites what’s in the table now.</p>'+
+    '<div class="scroll" style="max-height:360px"><table><thead><tr><th>Location</th><th>Using</th><th>Instead of</th></tr></thead><tbody>'+
+    conflicts.map(function(c){
+      return "<tr><td>"+esc(c.loc)+"</td><td><b>"+esc(c.winner.kw)+"</b> ("+c.winner.ft+" ft)</td><td>"+
+        c.losers.map(function(m){return esc(m.kw)+" ("+m.ft+" ft)";}).join(", ")+"</td></tr>";
+    }).join("")+"</tbody></table></div>"+
+    '<div class="row" style="margin-top:14px"><button class="ghost" id="ruleConflictCancel">Cancel</button>'+
+    '<button id="ruleConflictApply">Apply anyway</button></div>';
+  showModal(conflicts.length+" location"+(conflicts.length>1?"s":"")+" match more than one rule",body);
+  $("ruleConflictCancel").onclick=closeModal;
+  $("ruleConflictApply").onclick=function(){
+    Object.keys(next).forEach(function(l){S.loc[l]=next[l];});
+    closeModal();drawLoc();drawSuggest();drawIssues();
+  };
 }
 function drawLoc(){
   var ls=Object.keys(S.loc).sort();
@@ -1271,10 +1377,19 @@ function buildPulls(){
     var par=Math.max(1,Math.round(k.par||1));
     var sA=S.loc[r.start]||0,eA=S.loc[r.end]||0,ex=sA+eA+r.adj;
     var each=r.len+ex+waste;
-    for(var p=1;p<=par;p++)
+    var n=resolveNeutral(r),nid=n.has?n.color+" "+n.size:null,nk=nid?(S.key[nid]||{reel:null}):null;
+    for(var p=1;p<=par;p++){
       out.push({cable:r.cable,len:each,base:r.len,sA:sA,eA:eA,area:resolveArea(r),
         start:r.start,end:r.end,par:p,ofpar:par,raw:r.raw,src:r.i+2,row:r.row,
         cap:k.reel||defReel});
+      /* One neutral pull per parallel set -- each physical raceway needs its
+         own, same as the phase conductor(s) it runs with. Raw is left empty
+         so the parent run's Wire/Ground spec doesn't leak into this group's
+         spec line -- the identity ("White #10") already says the size. */
+      if(nid)out.push({cable:nid,len:each,base:r.len,sA:sA,eA:eA,area:resolveArea(r),
+        start:r.start,end:r.end,par:p,ofpar:par,raw:{},src:r.i+2,row:r.row,
+        cap:nk.reel||defReel,neutral:true});
+    }
   });
   return out;
 }
@@ -1472,6 +1587,7 @@ $("keyExport").onclick=function(){dl("cables.csv",keyCSV());};
 $("keyFileBtn").onclick=function(){$("keyFile").click();};
 $("keyFile").onchange=function(){readFile($("keyFile"),loadKeyCSV);};
 $("ruleAdd").onclick=function(){S.rules.push({kw:"",ft:parseFloat($("defExtra").value)||0});drawRules();};
+$("neutralRuleAdd").onclick=function(){S.neutralRules.push({field:"cable",val:"",color:"White",size:""});refresh();};
 $("areaRuleAdd").onclick=function(){S.areaRules.push({kw:"",area:""});drawAreaRules();drawAreaSuggest();};
 $("applyRules").onclick=applyRules;
 $("noExtra").onclick=function(){
@@ -1497,7 +1613,7 @@ document.addEventListener("keydown",function(e){if(e.key==="Escape")closeModal()
    (parseCSV, autoMap, pack, conduitOf/conduitTakeoff, reelVal, etc.)
    instead of duplicating them.
    ================================================================ */
-var SB={rows:[],headers:[],map:{},key:{},drop:{},ack:{},result:null,defVoltClass:"low",neutralRules:[]};
+var SB={rows:[],headers:[],map:{},key:{},drop:{},ack:{},result:null,defVoltClass:"low",neutralRules:[],rules:[],loc:{}};
 var BFIELDS={
   length:{label:"Run length",req:true,alias:["conduit length","wire length","measurement","length","run length","meas","dimension","footage","lf","linear feet","total length"]},
   circuits:{label:"Circuits",req:true,alias:["circuits","circuit","circuit numbers","circuit no","ckt"]},
@@ -1513,7 +1629,7 @@ var BFIELDS={
 };
 var LOW_COLORS=["Black","Red","Blue"],HIGH_COLORS=["Brown","Orange","Yellow"];
 var COLOR_ORDER=["Black","Red","Blue","Brown","Orange","Yellow"];
-var WIRE_HEX={Black:"#232323",Red:"#A6362B",Blue:"#2456A6",Brown:"#6B4423",Orange:"#C2701A",Yellow:"#C9A227",White:"#FFFFFF",Green:"#3D6B4A"};
+var WIRE_HEX={Black:"#232323",Red:"#A6362B",Blue:"#2456A6",Brown:"#6B4423",Orange:"#C2701A",Yellow:"#C9A227",White:"#FFFFFF",Grey:"#6E7275",Green:"#3D6B4A"};
 var WIRE_TEXT={White:"#191C1E",Yellow:"#191C1E"};
 
 /* Splits on top-level commas only -- a parenthesized group like "(25,27)"
@@ -1556,6 +1672,9 @@ function phaseColor(n,highVolt){
   var idx=Math.floor((n-1)/2)%3;
   return (highVolt?HIGH_COLORS:LOW_COLORS)[idx];
 }
+/* Neutral color follows voltage class too, not just phase -- Grey on high
+   volt (480Y/277), White on low volt (120/208), per standard practice. */
+function neutralColor(highVolt){return highVolt?"Grey":"White";}
 /* Bluebeam's own High/Low volt picker is the primary signal; a raw voltage
    number falls back to a 277V threshold (480Y/277 class vs 120/208 class)
    for jobs that export numbers instead of the picker's text. */
@@ -1572,10 +1691,13 @@ function isHighVolt(v){
    the NormalizePhases function from the user's VBA tool, so this reads the
    way they're already used to. */
 function describeRun(pulls){
-  var counts={},nIndiv=0,nShared=0;
+  var counts={},nIndiv=0,nShared=0,neutColor=null;
   pulls.forEach(function(p){
     if(p.role==="phase")counts[p.color]=(counts[p.color]||0)+1;
-    else if(p.role==="neutral"){if(p.shared)nShared++;else nIndiv++;}
+    else if(p.role==="neutral"){
+      neutColor=p.color;
+      if(p.shared)nShared++;else nIndiv++;
+    }
   });
   var parts=COLOR_ORDER.filter(function(c){return counts[c];})
     .map(function(c){return counts[c]>1?counts[c]+"× "+c:c;});
@@ -1583,7 +1705,7 @@ function describeRun(pulls){
   var ntags=[];
   if(nIndiv)ntags.push(nIndiv+" individual N");
   if(nShared)ntags.push(nShared+" shared N");
-  if(ntags.length)out+=(out?" + ":"")+ntags.join(", ");
+  if(ntags.length)out+=(out?" + ":"")+ntags.join(", ")+" ("+neutColor+")";
   return out||"—";
 }
 
@@ -1610,19 +1732,29 @@ function bRecords(){
   });
   return {ok:ok,noLen:noLen,noCirc:noCirc,withLen:withLen};
 }
-/* Same longest-keyword-wins shape as termination/area rules, matched
-   against a run's From, To, and Circuits text so a specific line (or a
-   group of them) can get a different neutral size -- e.g. an oversized
-   neutral for harmonic loads on one run, without changing every neutral
-   job-wide. Falls back to the Default field, then the run's own Wire Size. */
-function resolveNeutralSize(rec){
-  var hay=norm((rec.start||"")+" "+(rec.end||"")+" "+(rec.circuitsRaw||"")),best=-1,val=null;
+/* Each rule targets one field -- Start Location, End Location, or one
+   specific circuit number -- rather than a keyword matched against a blend
+   of them, so a rule can size the neutral on one circuit within a run that
+   shares several (e.g. "(25,27)N") without also catching the other. A
+   circuit-number match is inherently the most specific thing a rule can
+   say, so it always wins over a Start/End text match; among text rules the
+   longest match wins, same as termination/area rules. Falls back to the
+   Default field, then the run's own Wire Size. */
+function resolveNeutralSize(rec,term){
+  var circVal=null,textVal=null,textLen=-1;
   SB.neutralRules.forEach(function(r){
-    if(!r.kw)return;
-    var k=norm(r.kw);
-    if(k&&hay.indexOf(k)>-1&&k.length>best){best=k.length;val=r.size;}
+    if(!r.val)return;
+    if(r.field==="circuit"){
+      var num=parseFloat(r.val);
+      if(term&&isFinite(num)&&term.circuits.indexOf(num)>-1&&r.size)circVal=r.size;
+    }else{
+      var text=r.field==="end"?rec.end:rec.start;
+      var k=norm(r.val);
+      if(k&&norm(text||"").indexOf(k)>-1&&k.length>textLen&&r.size){textLen=k.length;textVal=r.size;}
+    }
   });
-  if(val)return val;
+  if(circVal)return circVal;
+  if(textVal)return textVal;
   var def=$("bNeutralDefault")?$("bNeutralDefault").value.trim():"";
   if(def)return def;
   return rec.wireRaw||"?";
@@ -1630,22 +1762,23 @@ function resolveNeutralSize(rec){
 /* Expands each conduit run into one "pull" per conductor: one per circuit
    (phase color, Wire Size), one per neutral term (White, sized by
    resolveNeutralSize), one ground per run (Green, Ground Size). All pulls
-   from one row share that row's length plus Length Adjustment -- they're
-   cut off the same physical run, wire-length rules apply the same as
-   One Line. */
+   from one row share that row's length plus Length Adjustment plus its
+   Start/End termination allowance -- they're cut off the same physical
+   run, wire-length rules apply the same as One Line. */
 function bBuildPulls(){
   var waste=parseFloat($("bWaste").value)||0;
   var out=[];
   bRecords().ok.forEach(function(r){
     var hv=isHighVolt(r.voltsRaw);
     if(hv==null)hv=SB.defVoltClass==="high";
-    var each=r.len+r.adj+waste;
+    var sA=SB.loc[r.start]||0,eA=SB.loc[r.end]||0;
+    var each=r.len+sA+eA+r.adj+waste;
     r.terms.forEach(function(term){
       term.circuits.forEach(function(cnum){
         out.push({run:r,color:phaseColor(cnum,hv),size:r.wireRaw||"?",role:"phase",circuit:cnum,len:each,base:r.len});
       });
       if(term.neutral)
-        out.push({run:r,color:"White",size:resolveNeutralSize(r),role:"neutral",
+        out.push({run:r,color:neutralColor(hv),size:resolveNeutralSize(r,term),role:"neutral",
           circuits:term.circuits.slice(),shared:term.shared,len:each,base:r.len});
     });
     out.push({run:r,color:"Green",size:r.groundRaw||"?",role:"ground",len:each,base:r.len});
@@ -1683,9 +1816,9 @@ function bIngest(text,name){
     if(SB.map.start==null||colFilledAt(SB.map.start,SB.rows)<0.2){SB.map.start=locFallback;SB.guessedLoc=true;}
     if(SB.map.end==null||colFilledAt(SB.map.end,SB.rows)<0.2){SB.map.end=locFallback;SB.guessedLoc=true;}
   }
-  SB.drop={};SB.ack={};SB.key={};SB.defVoltClass="low";SB.neutralRules=[];
+  SB.drop={};SB.ack={};SB.key={};SB.defVoltClass="low";SB.neutralRules=[];SB.rules=[];SB.loc={};
   $("bFileinfo").textContent=(name?name+" — ":"")+SB.rows.length+" rows, "+SB.headers.length+" columns";
-  ["bS2","bS3","bS4","bS6"].forEach(function(i){$(i).classList.remove("hidden");});
+  ["bS2","bS3","bS4","bS5","bS6"].forEach(function(i){$(i).classList.remove("hidden");});
   drawBMaps();bRefresh();
   $("bS2").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -1706,20 +1839,154 @@ function drawBMaps(){
 function bRefresh(){
   var ids=bIdentities();
   ids.forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};});
-  drawBKey();drawBNeutralRules();drawBIssues();
+  var locs={};
+  bRecords().withLen.forEach(function(r){if(r.start)locs[r.start]=1;if(r.end)locs[r.end]=1;});
+  Object.keys(locs).forEach(function(l){if(SB.loc[l]==null)SB.loc[l]=null;});
+  Object.keys(SB.loc).forEach(function(l){if(!locs[l])delete SB.loc[l];});
+  drawBKey();drawBNeutralRules();drawBRules();drawBSuggest();drawBLoc();drawBIssues();
 }
+var NEUTRAL_FIELDS=[{v:"start",label:"Start Location"},{v:"end",label:"End Location"},{v:"circuit",label:"Circuit Number"}];
 function drawBNeutralRules(){
   var el=$("bNeutralTbl");if(!el)return;
-  el.innerHTML='<thead><tr><th>If the run’s From/To/Circuits contains…</th><th style="width:140px">Neutral size</th><th style="width:44px"></th></tr></thead><tbody>'+
+  el.innerHTML='<thead><tr><th style="width:160px">If this run’s…</th><th>…contains / equals</th>'+
+    '<th style="width:140px">Neutral size</th><th style="width:44px"></th></tr></thead><tbody>'+
     SB.neutralRules.map(function(r,i){
-      return '<tr><td><input data-nr="'+i+'" data-p="kw" value="'+esc(r.kw)+'"></td>'+
+      var opts=NEUTRAL_FIELDS.map(function(f){return '<option value="'+f.v+'"'+(r.field===f.v?" selected":"")+">"+f.label+"</option>";}).join("");
+      var isCirc=r.field==="circuit";
+      return '<tr><td><select data-nr="'+i+'" data-p="field">'+opts+'</select></td>'+
+        '<td><input data-nr="'+i+'" data-p="val" type="'+(isCirc?"number":"text")+'" placeholder="'+
+        (isCirc?"e.g. 27":"e.g. PNL02")+'" value="'+esc(r.val)+'"></td>'+
         '<td><input data-nr="'+i+'" data-p="size" value="'+esc(r.size)+'"></td>'+
         '<td><button class="ghost sm" data-nrd="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
   Array.prototype.forEach.call(el.querySelectorAll("[data-nr]"),function(inp){
     inp.onchange=function(){var r=SB.neutralRules[+inp.dataset.nr];
-      if(inp.dataset.p==="size")r.size=inp.value;else r.kw=inp.value;};});
+      r[inp.dataset.p]=inp.value;
+      if(inp.dataset.p==="field")drawBNeutralRules();};});
   Array.prototype.forEach.call(el.querySelectorAll("[data-nrd]"),function(b){
     b.onclick=function(){SB.neutralRules.splice(+b.dataset.nrd,1);drawBNeutralRules();};});
+}
+
+/* ================= terminations (same shape as One Line's, matched
+   against SB.loc/SB.rules instead of S.loc/S.rules) ================= */
+function bLocPatterns(){
+  var locs=Object.keys(SB.loc);
+  if(!locs.length)return [];
+  var hits={};
+  locs.forEach(function(l){
+    var seen={};
+    String(l).toUpperCase().split(/[^A-Z0-9]+/).forEach(function(tok){
+      if(!tok)return;
+      (tok.match(/[A-Z]+|[0-9]+/g)||[]).forEach(function(part){
+        if(!/^[A-Z]{2,}$/.test(part))return;
+        if(seen[part])return;
+        seen[part]=1;
+        (hits[part]=hits[part]||[]).push(l);
+      });
+    });
+  });
+  var out=Object.keys(hits).filter(function(k){return hits[k].length>=2;})
+    .map(function(k){return {kw:k,n:hits[k].length,ex:hits[k]};});
+  out=out.filter(function(a){
+    return !out.some(function(b){
+      return b.kw!==a.kw&&b.kw.length>a.kw.length&&b.n===a.n&&b.kw.indexOf(a.kw)>-1;});
+  });
+  out=out.filter(function(a){
+    return !SB.rules.some(function(r){return norm(r.kw)===norm(a.kw);});});
+  out.sort(function(a,b){return b.n-a.n||a.kw.localeCompare(b.kw);});
+  return out.slice(0,24);
+}
+function drawBSuggest(){
+  var ps=bLocPatterns(),el=$("bSuggest");
+  if(!el)return;
+  if(!ps.length){el.innerHTML='<span class="reel-meta">No new patterns — every repeated label already has a rule.</span>';return;}
+  el.innerHTML=ps.map(function(pp){
+    var known=KNOWN_FT[pp.kw];
+    return '<div class="chip" data-kw="'+esc(pp.kw)+'" title="'+esc(pp.ex.slice(0,8).join(", "))+'">'+
+      esc(pp.kw)+' <span style="opacity:.6">'+pp.n+(known!=null?" · "+known+"ft?":"")+"</span></div>";}).join("");
+  Array.prototype.forEach.call(el.querySelectorAll("[data-kw]"),function(c){
+    c.onclick=function(){
+      var d=parseFloat($("bDefExtra").value);if(!isFinite(d))d=0;
+      var known=KNOWN_FT[c.dataset.kw];
+      SB.rules.push({kw:c.dataset.kw,ft:known!=null?known:d});
+      drawBRules();drawBSuggest();};
+  });
+}
+function drawBRules(){
+  var el=$("bRuletbl");if(!el)return;
+  el.innerHTML='<thead><tr><th>If the location contains…</th><th style="width:120px">Extra wire ft</th><th style="width:44px"></th></tr></thead><tbody>'+
+    SB.rules.map(function(r,i){
+      return '<tr><td><input data-br="'+i+'" data-p="kw" value="'+esc(r.kw)+'"></td>'+
+        '<td><input class="num" type="number" min="0" data-br="'+i+'" data-p="ft" value="'+r.ft+'"></td>'+
+        '<td><button class="ghost sm" data-brd="'+i+'">&times;</button></td></tr>';}).join("")+"</tbody>";
+  Array.prototype.forEach.call(el.querySelectorAll("[data-br]"),function(inp){
+    inp.onchange=function(){var r=SB.rules[+inp.dataset.br];
+      if(inp.dataset.p==="ft")r.ft=parseFloat(inp.value)||0;else r.kw=inp.value;};});
+  Array.prototype.forEach.call(el.querySelectorAll("[data-brd]"),function(b){
+    b.onclick=function(){SB.rules.splice(+b.dataset.brd,1);drawBRules();drawBSuggest();};});
+}
+/* Same review-before-override popup as One Line's applyRules(): if a
+   location matches more than one rule with genuinely different footage,
+   the longer keyword silently wins -- surfaced here before Apply commits. */
+function applyBRules(){
+  var d=parseFloat($("bDefExtra").value);if(!isFinite(d))d=0;
+  var next={},conflicts=[];
+  Object.keys(SB.loc).forEach(function(l){
+    var v=d,n=norm(l),best=-1,winner=null,matches=[];
+    SB.rules.forEach(function(r){
+      if(!r.kw)return;
+      var k=norm(r.kw);
+      if(k&&n.indexOf(k)>-1){
+        matches.push(r);
+        if(k.length>best){best=k.length;winner=r;v=r.ft;}
+      }
+    });
+    next[l]=v;
+    var losers=matches.filter(function(m){return m!==winner&&m.ft!==winner.ft;});
+    if(losers.length)conflicts.push({loc:l,winner:winner,losers:losers});
+  });
+  if(conflicts.length){showBRuleConflictModal(next,conflicts);return;}
+  Object.keys(next).forEach(function(l){SB.loc[l]=next[l];});
+  drawBLoc();drawBSuggest();drawBIssues();
+}
+function showBRuleConflictModal(next,conflicts){
+  var body='<p class="hint">These locations match more than one rule. The more specific keyword wins and the other is ignored there -- worth a look before this overwrites what’s in the table now.</p>'+
+    '<div class="scroll" style="max-height:360px"><table><thead><tr><th>Location</th><th>Using</th><th>Instead of</th></tr></thead><tbody>'+
+    conflicts.map(function(c){
+      return "<tr><td>"+esc(c.loc)+"</td><td><b>"+esc(c.winner.kw)+"</b> ("+c.winner.ft+" ft)</td><td>"+
+        c.losers.map(function(m){return esc(m.kw)+" ("+m.ft+" ft)";}).join(", ")+"</td></tr>";
+    }).join("")+"</tbody></table></div>"+
+    '<div class="row" style="margin-top:14px"><button class="ghost" id="bRuleConflictCancel">Cancel</button>'+
+    '<button id="bRuleConflictApply">Apply anyway</button></div>';
+  showModal(conflicts.length+" location"+(conflicts.length>1?"s":"")+" match more than one rule",body);
+  $("bRuleConflictCancel").onclick=closeModal;
+  $("bRuleConflictApply").onclick=function(){
+    Object.keys(next).forEach(function(l){SB.loc[l]=next[l];});
+    closeModal();drawBLoc();drawBSuggest();drawBIssues();
+  };
+}
+function drawBLoc(){
+  var el=$("bLoctbl");if(!el)return;
+  var ls=Object.keys(SB.loc).sort();
+  if(!ls.length){el.innerHTML="";return;}
+  el.innerHTML='<thead><tr><th>Location</th><th style="width:140px">Extra wire ft</th></tr></thead><tbody>'+
+    ls.map(function(l){var v=SB.loc[l];
+      return "<tr><td>"+esc(l)+'</td><td><input class="num" type="number" min="0" step="1" data-bloc="'+esc(l)+
+        '" value="'+(v==null?"":v)+'" placeholder="not set"></td></tr>';}).join("")+"</tbody>";
+  Array.prototype.forEach.call(el.querySelectorAll("[data-bloc]"),function(inp){
+    inp.onchange=function(){var n=parseFloat(inp.value);
+      SB.loc[inp.dataset.bloc]=isFinite(n)&&n>=0?n:null;drawBLoc();drawBIssues();};});
+}
+function bLocCSV(){var rows=[["Location","Extra wire ft"]];
+  Object.keys(SB.loc).sort().forEach(function(l){rows.push([l,SB.loc[l]==null?"":SB.loc[l]]);});return csv(rows);}
+function loadBLocCSV(t){
+  var rows=parseCSV(t);if(rows.length<2)return;
+  var h=rows[0],iL=pick(h,["location","name","point","gear","equipment"]),
+      iF=pick(h,["extra wire ft","extra wire","extra","allowance","ft","feet"]);
+  if(iL<0||iF<0){alert('That file needs "Location" and "Extra wire ft" columns.');return;}
+  var n=0;
+  rows.slice(1).forEach(function(r){var k=String(r[iL]||"").trim();if(!k)return;
+    var v=parseLen(r[iF]);if(v==null)return;SB.loc[k]=v;n++;});
+  drawBLoc();drawBIssues();alert("Loaded "+n+" allowances.");
 }
 function buildBIssues(){
   var out=[],R=bRecords();
@@ -1754,6 +2021,13 @@ function buildBIssues(){
     out.push({lv:"ask",id:"nocirc",t:R.noCirc.length+" row"+(R.noCirc.length>1?"s have":" has")+" no readable circuits",
       d:"Excluded from the count already — blank Circuits field, or text that doesn't match the number or (group)N pattern.",
       ex:R.noCirc.slice(0,4).map(function(r){return "row "+(r.i+2)+'  "'+r.circuitsRaw+'"';})});
+
+  var ml=Object.keys(SB.loc).filter(function(l){return SB.loc[l]==null;});
+  if(ml.length)
+    out.push({lv:"ask",id:"bloc",t:ml.length+" location"+(ml.length>1?"s have":" has")+" no extra wire set",
+      d:"They'll count as zero, so those pulls come out short by whatever it takes to land and terminate.",
+      ex:ml.slice(0,6),
+      act:[{k:"rules",label:"Apply keyword rules"},{k:"goto",to:"bS5",label:"Set them by hand"}]});
 
   var ambig=R.ok.filter(function(r){return isHighVolt(r.voltsRaw)==null;});
   if(ambig.length&&!SB.ack["voltclass"])
@@ -1792,6 +2066,7 @@ function bDoAct(iss,a){
   else if(a.k==="volthigh"){SB.defVoltClass="high";SB.ack["voltclass"]=1;}
   else if(a.k==="goto"){$(a.to).scrollIntoView({behavior:"smooth",block:"start"});return;}
   else if(a.k==="fixvolt"){openFixVoltModal();return;}
+  else if(a.k==="rules")applyBRules();
   bRefresh();
 }
 /* Same shape as One Line's openFixCableModal -- lists every run that
@@ -2007,7 +2282,16 @@ $("bDemo").onclick=function(){bIngest(BRANCH_SAMPLE,"sample");};
 $("bDefReel").onchange=function(){var v=reelVal($("bDefReel").value);if(v!=null)$("bDefReel").value=v;};
 $("bBulkAll").onclick=function(){var v=reelVal($("bDefReel").value);if(!v)return;
   bIdentities().forEach(function(id){if(!SB.key[id])SB.key[id]={reel:null};SB.key[id].reel=v;});drawBKey();};
-$("bNeutralRuleAdd").onclick=function(){SB.neutralRules.push({kw:"",size:""});drawBNeutralRules();};
+$("bNeutralRuleAdd").onclick=function(){SB.neutralRules.push({field:"start",val:"",size:""});drawBNeutralRules();};
+$("bRuleAdd").onclick=function(){SB.rules.push({kw:"",ft:parseFloat($("bDefExtra").value)||0});drawBRules();};
+$("bApplyRules").onclick=applyBRules;
+$("bNoExtra").onclick=function(){
+  $("bDefExtra").value=0;
+  Object.keys(SB.loc).forEach(function(l){SB.loc[l]=0;});
+  drawBLoc();drawBSuggest();drawBIssues();};
+$("bLocExport").onclick=function(){dl("branch_allowances.csv",bLocCSV());};
+$("bLocFileBtn").onclick=function(){$("bLocFile").click();};
+$("bLocFile").onchange=function(){readFile($("bLocFile"),loadBLocCSV);};
 $("bMode").onchange=function(){$("bModeNote").textContent=BNOTES[$("bMode").value];};
 $("bModeNote").textContent=BNOTES.ffd;
 $("bRun").onclick=bRun;
