@@ -160,7 +160,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section class="noprint">
   <div class="step">1 &middot; Takeoff</div>
   <h2>Drop the CSV</h2>
-  <p class="hint"><b>What this does:</b> turns a Bluebeam Markups List export of trunk/feeder cable takeoffs into a reel order &mdash; how many reels of each cable to buy, which pulls go on which physical reel, and a numbered tag for every reel. <b>For accurate results:</b> give every run a real measured length, use a consistent Designation (or Wire Size + Ground Size if the job has no naming scheme) so the right runs get grouped onto the same reels, and fill in Start/End Location if you want per-end termination allowances calculated automatically instead of assumed.</p>
+  <p class="hint"><b>What this does:</b> turns a Bluebeam Markups List export of feeder cable takeoffs into a reel order &mdash; how many reels of each cable to buy, which pulls go on which physical reel, and a numbered tag for every reel. <b>For accurate results:</b> give every run a real measured length, use a consistent Designation (or Wire Size + Ground Size if the job has no naming scheme) so the right runs get grouped onto the same reels, and fill in Start/End Location if you want per-end termination allowances calculated automatically instead of assumed.</p>
   <p class="hint">Any takeoff export, any column order, any job. Headers are matched by meaning, not spelling, and columns it doesn't recognize ride along to the pull sheet untouched. Nothing needs deleting first.</p>
 
   <details class="howto">
@@ -208,9 +208,10 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section id="s4" class="hidden noprint">
   <div class="step">4 &middot; Cables</div>
   <h2>Reels and parallels</h2>
-  <p class="hint">One row per cable found in the takeoff. Reel length is the put-up you can actually buy it on &mdash; 1000' on small wire, 500 or 250 or 200 on the big stuff, up to 5000' on large-drum feeder. Colors are free text and only used to group the printout.</p>
+  <p class="hint">One row per cable found in the takeoff. Reel length is the put-up you can actually buy it on &mdash; 1000' on small wire, 500 or 250 or 200 on the big stuff, up to 5000' on large-drum feeder. Colors are free text and only used to group the printout. For MV/large-reel cable that's really limited by what a crane or forklift can lift rather than a fixed put-up length, switch a cable to "Cap by: Weight" and type in a max reel weight (lbs) and that cable's own weight (lb/ft) &mdash; both are whatever you type, nothing is looked up.</p>
   <div class="row" style="margin-top:0">
     <div class="fld w"><label for="defReel">Default reel (ft)</label><input id="defReel" class="num" type="number" min="1" max="5000" list="putups" value="500"></div>
+    <div class="fld w"><label for="defReelLbs">Default reel (lbs)</label><input id="defReelLbs" class="num" type="number" min="1" value="4200"></div>
     <button id="bulkAll" class="ghost">Set every cable to this</button>
     <button id="keyExport" class="ghost">Export cable list</button>
     <button id="keyFileBtn" class="ghost">Load cable list</button>
@@ -221,7 +222,7 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
     <option value="3000"><option value="4000"><option value="5000"></datalist>
   <div class="scroll" style="margin-top:14px"><table id="keytbl"></table></div>
   <h5>Neutral</h5>
-  <p class="hint" style="margin-bottom:9px">Most trunk/feeder runs don't carry a neutral, so this is opt-in &mdash; add a rule for the runs that do. Fill in Designation/Cable, Start Location, and/or End Location on a rule; all filled fields must match (leave one blank to not filter on it), so combining two or three pins a rule down to one exact run when any single one of them would match several. More fields, or longer/more specific text, wins over a broader rule. Unmatched runs get no neutral. Color is White or Grey, whichever this job actually uses &mdash; White for low volt (120/208), Grey for high volt (480Y/277) is standard practice, but you pick it per rule.</p>
+  <p class="hint" style="margin-bottom:9px">Most feeder runs don't carry a neutral, so this is opt-in &mdash; add a rule for the runs that do. Fill in Designation/Cable, Start Location, and/or End Location on a rule; all filled fields must match (leave one blank to not filter on it), so combining two or three pins a rule down to one exact run when any single one of them would match several. More fields, or longer/more specific text, wins over a broader rule. Unmatched runs get no neutral. Color is White or Grey, whichever this job actually uses &mdash; White for low volt (120/208), Grey for high volt (480Y/277) is standard practice, but you pick it per rule.</p>
   <div class="scroll" style="margin-bottom:10px"><table id="neutralTbl"></table></div>
   <div class="row" style="margin-top:0"><button id="neutralRuleAdd" class="ghost sm">Add rule</button></div>
 </section>
@@ -298,7 +299,12 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section class="noprint">
   <div class="step">1 &middot; Takeoff</div>
   <h2>Drop the branch CSV</h2>
-  <p class="hint"><b>What this does:</b> turns a Bluebeam branch-circuit export into a run-by-run conduit schedule and a color-coded wire spool order, so nobody's hand-tracking which phase color and neutral each circuit needs. <b>For accurate results:</b> set Voltage on every run using Bluebeam's High Volt/Low Volt picker (it decides brown/orange/yellow vs black/red/blue), and enter Circuits using this notation &mdash; a bare number with no letter means no neutral is pulled for it (<code>4</code>); add a trailing N for a circuit with its own neutral (<code>4N</code>); wrap circuits that share one neutral in parentheses with a trailing N (<code>(4,6)N</code>); separate multiple circuits or groups in the same conduit with commas, e.g. <code>1N,(25,27)N</code> &mdash; one circuit with its own neutral, plus two circuits sharing one.</p>
+  <p class="hint"><b>What this does:</b> turns a Bluebeam branch-circuit export into a run-by-run conduit schedule and a color-coded wire spool order, so nobody's hand-tracking which phase color and neutral each circuit needs.</p>
+  <p class="hint"><b>For accurate results:</b> set Voltage on every run using Bluebeam's High Volt/Low Volt picker (it decides brown/orange/yellow vs black/red/blue). Enter Circuits using this notation:<br>
+  &bull; <code>4</code> &mdash; bare number, no neutral pulled<br>
+  &bull; <code>4N</code> &mdash; trailing N, its own individual neutral<br>
+  &bull; <code>(4,6)N</code> &mdash; parentheses + trailing N, one shared neutral<br>
+  &bull; <code>1N,(25,27)N</code> &mdash; commas separate multiple circuits/groups in the same conduit</p>
   <p class="hint">Same Bluebeam CSV Summary workflow as One Line, just a different export. Same lenient parsing: any column order, any job, unrecognized columns ride along untouched.</p>
 
   <details class="howto">
@@ -343,9 +349,10 @@ input,select{font:400 13px/1 "IBM Plex Mono",monospace;padding:6px 7px;border:1p
 <section id="bS4" class="hidden noprint">
   <div class="step">4 &middot; Reels</div>
   <h2>Reel length by color</h2>
-  <p class="hint">One row per color/size found in the takeoff &mdash; that's the cable identity here, same way Designation is on One Line. Reel length is the put-up you'd actually buy it on.</p>
+  <p class="hint">One row per color/size found in the takeoff &mdash; that's the cable identity here, same way Designation is on One Line. Reel length is the put-up you'd actually buy it on. For MV/large-reel cable that's really limited by lift weight rather than a fixed put-up length, switch to "Cap by: Weight" and type in a max reel weight (lbs) and that conductor's own weight (lb/ft) &mdash; both are whatever you type, nothing is looked up.</p>
   <div class="row" style="margin-top:0">
     <div class="fld w"><label for="bDefReel">Default reel (ft)</label><input id="bDefReel" class="num" type="number" min="1" max="5000" list="putups" value="2500"></div>
+    <div class="fld w"><label for="bDefReelLbs">Default reel (lbs)</label><input id="bDefReelLbs" class="num" type="number" min="1" value="4200"></div>
     <button id="bBulkAll" class="ghost">Set every color to this</button>
   </div>
   <h5>Neutral conductor size</h5>
@@ -766,7 +773,7 @@ function records(){
   });
   return {ok:ok,noLen:noLen,noCable:noCable};
 }
-/* Neutral rules are opt-in, not opt-out -- most trunk/feeder runs don't
+/* Neutral rules are opt-in, not opt-out -- most feeder runs don't
    carry a neutral, so a run only gets one if a rule actually matches it
    (Designation/Cable, Start Location, or End Location), longest match
    wins. Unlike termination rules there's no separate Apply step, same
@@ -818,8 +825,8 @@ function refresh(){
   var cbs=cables(),neut={};neutralIdentities().forEach(function(n){neut[n]=1;});
   cbs.forEach(function(c){
     if(!S.key[c])S.key[c]=neut[c]?
-      {par:1,reel:null,colors:c.split(" ")[0],note:"Neutral",assumedPar:true,assumedReel:true}:
-      {par:1,reel:null,colors:"",note:"",assumedPar:true,assumedReel:true};
+      {par:1,reel:null,capBy:"len",reelLbs:null,lbft:null,colors:c.split(" ")[0],note:"Neutral",assumedPar:true,assumedReel:true}:
+      {par:1,reel:null,capBy:"len",reelLbs:null,lbft:null,colors:"",note:"",assumedPar:true,assumedReel:true};
   });
   var recs=records(),locs={};
   recs.ok.forEach(function(r){if(r.start)locs[r.start]=1;if(r.end)locs[r.end]=1;});
@@ -1065,14 +1072,23 @@ function drawKey(){
   var neut={};records().ok.forEach(function(r){var n=resolveNeutral(r);
     if(n.has){var id=n.color+" "+n.size;neut[id]=(neut[id]||0)+1;}});
   $("keytbl").innerHTML='<thead><tr><th>Cable</th><th style="width:64px">Runs</th>'+
-    '<th style="width:88px">Sets per run</th><th style="width:112px">Reel ft</th>'+
+    '<th style="width:88px">Sets per run</th><th style="width:90px">Cap by</th>'+
+    '<th style="width:100px">Reel ft</th><th style="width:100px">Max lbs</th><th style="width:80px">lb/ft</th>'+
     '<th>Colors (free text)</th><th>Note</th></tr></thead><tbody>'+
-    cbs.map(function(c){var v=S.key[c],isN=neut[c]!=null;
+    cbs.map(function(c){var v=S.key[c],isN=neut[c]!=null,isWt=v.capBy==="wt";
       return "<tr><td><b>"+esc(c)+"</b></td>"+
         '<td class="num">'+(isN?neut[c]:(counts[c]||0))+"</td>"+
         (isN?'<td class="num reel-meta" title="Follows the phase run’s own parallel count">1 / set</td>'
           :'<td><input class="num" type="number" min="1" step="1" data-c="'+esc(c)+'" data-p="par" value="'+v.par+'"></td>')+
-        '<td><input class="num" type="number" min="1" max="5000" list="putups" data-c="'+esc(c)+'" data-p="reel" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"></td>'+
+        '<td><select data-c="'+esc(c)+'" data-p="capBy">'+
+          '<option value="len"'+(isWt?"":" selected")+">Length</option>"+
+          '<option value="wt"'+(isWt?" selected":"")+">Weight</option></select></td>"+
+        '<td><input class="num" type="number" min="1" max="5000" list="putups" data-c="'+esc(c)+
+          '" data-p="reel" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"'+(isWt?" disabled":"")+'></td>'+
+        '<td><input class="num" type="number" min="1" data-c="'+esc(c)+'" data-p="reelLbs" value="'+
+          (v.reelLbs==null?"":v.reelLbs)+'" placeholder="default"'+(isWt?"":" disabled")+'></td>'+
+        '<td><input class="num" type="number" min="0" step="any" data-c="'+esc(c)+'" data-p="lbft" value="'+
+          (v.lbft==null?"":v.lbft)+'"'+(isWt?"":" disabled")+'></td>'+
         '<td><input data-c="'+esc(c)+'" data-p="colors" value="'+esc(v.colors)+'" placeholder="e.g. brown, orange, yellow"></td>'+
         '<td><input data-c="'+esc(c)+'" data-p="note" value="'+esc(v.note)+'" placeholder="connector, label, anything"></td></tr>';
     }).join("")+"</tbody>";
@@ -1080,6 +1096,9 @@ function drawKey(){
     el.onchange=function(){var o=S.key[el.dataset.c],p=el.dataset.p;
       if(p==="par"){var n=parseFloat(el.value);o.par=(isFinite(n)&&n>0)?Math.round(n):1;o.assumedPar=false;}
       else if(p==="reel"){var m=reelVal(el.value);o.reel=m;o.assumedReel=!o.reel;if(m!=null)el.value=m;}
+      else if(p==="reelLbs"){var n2=parseFloat(el.value);o.reelLbs=isFinite(n2)&&n2>0?n2:null;}
+      else if(p==="lbft"){var n3=parseFloat(el.value);o.lbft=isFinite(n3)&&n3>=0?n3:null;}
+      else if(p==="capBy")o.capBy=el.value;
       else o[p]=el.value;
       refresh();};
   });
@@ -1108,24 +1127,31 @@ function drawNeutralRules(){
   });
 }
 function keyCSV(){
-  var rows=[["Cable","Sets per run","Reel length ft","Colors","Note"]];
+  var rows=[["Cable","Sets per run","Cap by","Reel length ft","Max reel lbs","lb/ft","Colors","Note"]];
   Object.keys(S.key).sort().forEach(function(c){var v=S.key[c];
-    rows.push([c,v.par,v.reel==null?"":v.reel,v.colors,v.note]);});
+    rows.push([c,v.par,v.capBy==="wt"?"Weight":"Length",v.reel==null?"":v.reel,
+      v.reelLbs==null?"":v.reelLbs,v.lbft==null?"":v.lbft,v.colors,v.note]);});
   return csv(rows);
 }
 function loadKeyCSV(t){
   var rows=parseCSV(t);if(rows.length<2)return;
   var h=rows[0],iN=pick(h,["cable","designation","cable type","desig","type"]),
       iP=pick(h,["sets per run","parallels","parallel","sets"]),
+      iB=pick(h,["cap by","cap"]),
       iR=pick(h,["reel length ft","reel length","reel ft","reel","spool length","put up"]),
+      iL=pick(h,["max reel lbs","reel lbs","max lbs","reel weight","max reel weight"]),
+      iW=pick(h,["lb/ft","lbs/ft","lb per ft","weight per ft"]),
       iC=pick(h,["colors","conductor colors","color","phases"]),
       iT=pick(h,["note","notes","label","connector"]);
   if(iN<0){alert('That file needs a column named "Cable" or "Designation".');return;}
   var n=0;
   rows.slice(1).forEach(function(r){
     var k=String(r[iN]||"").trim().toUpperCase();if(!k)return;
-    var p=iP>-1?parseFloat(r[iP]):NaN,rl=iR>-1?parseLen(r[iR]):null;
+    var p=iP>-1?parseFloat(r[iP]):NaN,rl=iR>-1?parseLen(r[iR]):null,
+      rlbs=iL>-1?parseFloat(r[iL]):NaN,lbft=iW>-1?parseFloat(r[iW]):NaN,
+      capBy=iB>-1&&/wt|weight|lb/i.test(String(r[iB]||""))?"wt":"len";
     S.key[k]={par:isFinite(p)&&p>0?Math.round(p):1,reel:rl&&rl>0?rl:null,
+      capBy:capBy,reelLbs:isFinite(rlbs)&&rlbs>0?rlbs:null,lbft:isFinite(lbft)&&lbft>=0?lbft:null,
       colors:iC>-1?String(r[iC]||"").trim():"",note:iT>-1?String(r[iT]||"").trim():"",
       assumedPar:!(isFinite(p)&&p>0),assumedReel:!(rl&&rl>0)};
     n++;});
@@ -1432,42 +1458,60 @@ function conduitCSV(recs){
 }
 
 /* ================= pack ================= */
+/* Reel capacity per cable is either length (ft, the default) or weight
+   (lbs) -- both manual: "Max reel lbs" and the cable's own "lb/ft" are
+   typed in directly on the Cables table, no lookup table or auto-guess.
+   Weight is computed for every pull regardless of mode (harmless zero if
+   lb/ft isn't set) so a length-capped cable can still report weight if the
+   field happens to be filled in. */
+function capOf(k,defReel,defReelLbs){
+  var by=k.capBy==="wt"?"wt":"len";
+  return {by:by,val:by==="wt"?(k.reelLbs||defReelLbs||0):(k.reel||defReel)};
+}
 function buildPulls(){
-  var waste=parseFloat($("waste").value)||0,defReel=reelVal($("defReel").value)||500,out=[];
+  var waste=parseFloat($("waste").value)||0,defReel=reelVal($("defReel").value)||500,
+      defReelLbs=parseFloat($("defReelLbs").value)||0,out=[];
   records().ok.forEach(function(r){
     var k=S.key[r.cable]||{par:1,reel:null};
     var par=Math.max(1,Math.round(k.par||1));
     var sA=S.loc[r.start]||0,eA=S.loc[r.end]||0,ex=sA+eA+r.adj;
-    var each=r.len+ex+waste;
-    var n=resolveNeutral(r),nid=n.has?n.color+" "+n.size:null,nk=nid?(S.key[nid]||{reel:null}):null;
+    var each=r.len+ex+waste,c=capOf(k,defReel,defReelLbs);
+    var n=resolveNeutral(r),nid=n.has?n.color+" "+n.size:null,
+      nk=nid?(S.key[nid]||{reel:null}):null,nc=nid?capOf(nk,defReel,defReelLbs):null;
     for(var p=1;p<=par;p++){
-      out.push({cable:r.cable,len:each,base:r.len,sA:sA,eA:eA,area:resolveArea(r),
+      out.push({cable:r.cable,len:each,wt:each*(k.lbft||0),base:r.len,sA:sA,eA:eA,area:resolveArea(r),
         start:r.start,end:r.end,par:p,ofpar:par,raw:r.raw,src:r.i+2,row:r.row,
-        cap:k.reel||defReel});
+        cap:c.val,capBy:c.by});
       /* One neutral pull per parallel set -- each physical raceway needs its
          own, same as the phase conductor(s) it runs with. Raw is left empty
          so the parent run's Wire/Ground spec doesn't leak into this group's
          spec line -- the identity ("White #10") already says the size. */
-      if(nid)out.push({cable:nid,len:each,base:r.len,sA:sA,eA:eA,area:resolveArea(r),
+      if(nid)out.push({cable:nid,len:each,wt:each*(nk.lbft||0),base:r.len,sA:sA,eA:eA,area:resolveArea(r),
         start:r.start,end:r.end,par:p,ofpar:par,raw:{},src:r.i+2,row:r.row,
-        cap:nk.reel||defReel,neutral:true});
+        cap:nc.val,capBy:nc.by,neutral:true});
     }
   });
   return out;
 }
-function pack(items,cap,mode){
+/* valKey picks what the bin-packing actually measures against cap -- "len"
+   (feet, the default) or "wt" (pounds, for weight-capped MV reels). Same
+   first-fit-decreasing algorithm either way; only the number being packed
+   changes, so length and weight capping share one implementation. */
+function pack(items,cap,mode,valKey){
+  valKey=valKey||"len";
   var bins=[],over=[],list=items.slice();
-  if(mode!=="seq")list.sort(function(a,b){return b.len-a.len;});
+  if(mode!=="seq")list.sort(function(a,b){return b[valKey]-a[valKey];});
   list.forEach(function(it){
-    if(it.len>cap){over.push(it);return;}
+    var v=it[valKey];
+    if(v>cap){over.push(it);return;}
     if(mode==="seq"){
       var last=bins[bins.length-1];
-      if(last&&last.used+it.len<=cap+1e-9){last.items.push(it);last.used+=it.len;}
-      else bins.push({items:[it],used:it.len});
+      if(last&&last.used+v<=cap+1e-9){last.items.push(it);last.used+=v;}
+      else bins.push({items:[it],used:v});
       return;}
     for(var i=0;i<bins.length;i++)
-      if(bins[i].used+it.len<=cap+1e-9){bins[i].items.push(it);bins[i].used+=it.len;return;}
-    bins.push({items:[it],used:it.len});});
+      if(bins[i].used+v<=cap+1e-9){bins[i].items.push(it);bins[i].used+=v;return;}
+    bins.push({items:[it],used:v});});
   return {bins:bins,over:over};
 }
 function run(){
@@ -1475,29 +1519,33 @@ function run(){
   if(!pulls.length){alert("No usable rows.");return;}
   var mode=$("mode").value,hold=parseFloat($("hold").value)||0;
   var byC={};pulls.forEach(function(p){(byC[p.cable]=byC[p.cable]||[]).push(p);});
-  var res={cables:[],over:[],totPulls:pulls.length,totFt:0,totReels:0,naive:0};
+  var res={cables:[],over:[],totPulls:pulls.length,totFt:0,totWt:0,totReels:0,naive:0};
   Object.keys(byC).sort().forEach(function(c,ci){
-    var items=byC[c],capFull=items[0].cap,cap=Math.max(1,capFull-hold);
+    var items=byC[c],capBy=items[0].capBy,capFull=items[0].cap,cap=Math.max(1,capFull-hold);
     var ft=items.reduce(function(a,b){return a+b.len;},0);
-    res.totFt+=ft;res.naive+=Math.ceil(ft/capFull);
+    var wt=items.reduce(function(a,b){return a+(b.wt||0);},0);
+    var packedVal=capBy==="wt"?wt:ft;
+    res.totFt+=ft;res.totWt+=wt;res.naive+=Math.ceil(packedVal/capFull);
     var reels=[];
     if(mode==="group"){
       var byA={};items.forEach(function(p){var a=p.area||"(no area)";(byA[a]=byA[a]||[]).push(p);});
       Object.keys(byA).sort().forEach(function(a){
-        var r=pack(byA[a],cap,"ffd");
+        var r=pack(byA[a],cap,"ffd",capBy);
         r.bins.forEach(function(b){b.area=a;reels.push(b);});
         r.over.forEach(function(o){res.over.push(o);});});
     }else{
-      var r2=pack(items,cap,mode);
+      var r2=pack(items,cap,mode,capBy);
       r2.bins.forEach(function(b){reels.push(b);});
       r2.over.forEach(function(o){res.over.push(o);});}
     reels.forEach(function(b,i){
       b.id=cableSlug(c)+"-R"+String(i+1).padStart(2,"0");
-      b.idx=i+1;b.of=reels.length;b.cable=c;b.cap=capFull;b.tail=capFull-b.used;});
+      b.idx=i+1;b.of=reels.length;b.cable=c;b.cap=capFull;b.capBy=capBy;b.tail=capFull-b.used;
+      b.usedFt=b.items.reduce(function(a,p){return a+p.len;},0);
+      b.usedWt=b.items.reduce(function(a,p){return a+(p.wt||0);},0);});
     res.totReels+=reels.length;
-    res.cables.push({c:c,key:S.key[c]||{par:1},reels:reels,ft:ft,pulls:items.length,
+    res.cables.push({c:c,key:S.key[c]||{par:1},reels:reels,ft:ft,wt:wt,pulls:items.length,
       spec:specLabel(items),
-      cap:capFull,color:PALETTE[ci%PALETTE.length],
+      cap:capFull,capBy:capBy,color:PALETTE[ci%PALETTE.length],
       colors:(S.key[c]&&S.key[c].colors)||""});
   });
   var seq=0;
@@ -1509,11 +1557,12 @@ function render(res){
   h+='<div class="stats">'+
     '<div class="stat"><b>'+res.totReels+'</b><span>Reels to order</span></div>'+
     '<div class="stat"><b>'+fc(res.totFt)+'</b><span>Total feet</span></div>'+
+    (res.totWt>0?'<div class="stat"><b>'+fc(res.totWt)+'</b><span>Total lbs</span></div>':"")+
     '<div class="stat"><b>'+res.totPulls+'</b><span>Individual pulls</span></div>'+
     '<div class="stat'+(res.over.length?" bad":"")+'"><b>'+res.over.length+'</b><span>Won\u2019t fit a reel</span></div></div>';
   var diff=res.totReels-res.naive;
   if(diff>0)h+='<div class="iss stop"><h6>'+diff+" more reel"+(diff>1?"s":"")+
-    " than total feet \u00f7 reel length</h6><p>A pull can\u2019t be spliced across two reels, so a footage total always under-counts.</p></div>";
+    " than a simple footage/weight \u00f7 capacity estimate</h6><p>A pull can\u2019t be spliced across two reels, so that estimate always under-counts.</p></div>";
 
   /* group by color string when given, otherwise one group */
   var groups={};
@@ -1522,27 +1571,31 @@ function render(res){
     var ds=groups[g];
     var reels=ds.reduce(function(a,b){return a+b.reels.length;},0);
     var ft=ds.reduce(function(a,b){return a+b.ft;},0);
-    h+='<div class="grp"><h3>'+esc(g)+'</h3><div class="tot">'+reels+" reels &middot; "+fc(ft)+" ft</div></div>";
+    var wt=ds.reduce(function(a,b){return a+b.wt;},0);
+    h+='<div class="grp"><h3>'+esc(g)+'</h3><div class="tot">'+reels+" reels &middot; "+fc(ft)+" ft"+
+      (wt>0?" &middot; "+fc(wt)+" lbs":"")+"</div></div>";
     ds.forEach(function(x){
       h+='<div class="desig"><div class="desig-hd"><h4>'+esc(x.c)+
         (x.spec&&x.c.indexOf(x.spec)<0?' <span class="spec">'+esc(x.spec)+"</span>":"")+
         '</h4><div class="lbl">'+
         (x.key.note?esc(x.key.note)+" &middot; ":"")+x.key.par+" set"+(x.key.par>1?"s":"")+
-        "/run &middot; "+f1(x.cap)+" ft reels &middot; "+x.pulls+" pulls</div></div>";
+        "/run &middot; "+f1(x.cap)+(x.capBy==="wt"?" lb":" ft")+" reels &middot; "+x.pulls+" pulls</div></div>";
       x.reels.forEach(function(b){
+        var pct=Math.round(b.used/b.cap*100),unit=b.capBy==="wt"?"lbs":"ft";
         h+='<div class="reel"><div class="reel-hd"><div class="reel-id">'+
           '<span class="spoolno">Spool '+String(b.no).padStart(3,"0")+"</span>"+
           esc(b.id)+' <span class="reel-meta">'+b.idx+" of "+b.of+
           (b.area?" &middot; "+esc(b.area):"")+'</span></div><div class="reel-meta">'+
-          f1(b.used)+" / "+f1(b.cap)+" ft &middot; "+f1(b.tail)+" ft tail &middot; "+
-          Math.round(b.used/b.cap*100)+"%</div></div>";
-        h+='<div class="bar">'+b.items.map(function(p,i){var w=p.len/b.cap*100;
+          f1(b.used)+" / "+f1(b.cap)+" "+unit+" &middot; "+f1(b.tail)+" "+unit+" tail &middot; "+
+          pct+"%"+(b.capBy==="wt"?" &middot; "+fc(b.usedFt)+" ft":"")+"</div></div>";
+        h+='<div class="bar">'+b.items.map(function(p,i){var pv=b.capBy==="wt"?p.wt:p.len,w=pv/b.cap*100;
           return '<div class="seg" style="width:'+w+"%;background:"+x.color+";opacity:"+(i%2?.82:1)+
-            '" title="'+esc(p.start+" \u2192 "+p.end)+" "+f1(p.len)+' ft">'+(w>9?f1(p.len):"")+"</div>";
+            '" title="'+esc(p.start+" \u2192 "+p.end)+" "+f1(pv)+" "+unit+'">'+(w>9?f1(pv):"")+"</div>";
         }).join("")+"</div>";
         h+='<div class="reel-pulls">'+b.items.map(function(p){
+          var pv=b.capBy==="wt"?p.wt:p.len;
           return "<span>"+esc(p.start||"?")+"\u2192"+esc(p.end||"?")+
-            (p.ofpar>1?" ("+p.par+"/"+p.ofpar+")":"")+" <b>"+f1(p.len)+"</b></span>";}).join("")+"</div></div>";
+            (p.ofpar>1?" ("+p.par+"/"+p.ofpar+")":"")+" <b>"+f1(pv)+"</b></span>";}).join("")+"</div></div>";
       });
       h+="</div>";});
   });
@@ -1570,25 +1623,34 @@ function render(res){
 function pullCSV(){
   var res=S.result;
   var head=["Spool #","Reel ID","Cable","Reel of","Set","Start allow ft","End allow ft",
-            "Cut length ft","Reel ft","Source row"].concat(S.headers);
+            "Cut length ft","Cut weight lbs","Reel cap","Source row"].concat(S.headers);
   var rows=[head];
-  function line(no,id,of,p,cap){
+  function line(no,id,of,p,cap,capBy){
     return [no,id,p.cable,of,p.ofpar>1?p.par+" of "+p.ofpar:"1",
-            f1(p.sA),f1(p.eA),f1(p.len),f1(cap),p.src]
+            f1(p.sA),f1(p.eA),f1(p.len),p.wt?f1(p.wt):"",
+            f1(cap)+(capBy==="wt"?" lbs":" ft"),p.src]
       .concat(S.headers.map(function(_,i){return p.row[i]==null?"":p.row[i];}));
   }
   res.cables.forEach(function(x){x.reels.forEach(function(b){
-    b.items.forEach(function(p){rows.push(line(b.no,b.id,b.idx+" of "+b.of,p,b.cap));});});});
-  res.over.forEach(function(p){rows.push(line("","OVERSIZE","",p,p.cap));});
+    b.items.forEach(function(p){rows.push(line(b.no,b.id,b.idx+" of "+b.of,p,b.cap,b.capBy));});});});
+  res.over.forEach(function(p){rows.push(line("","OVERSIZE","",p,p.cap,p.capBy));});
   return csv(rows);
 }
-/* One row per physical reel -- this is the tag list you write on the flanges. */
+/* One row per physical reel -- this is the tag list you write on the flanges.
+   Feet used/of tail is always real footage (b.usedFt), regardless of what
+   the reel was actually capped on, so a weight-capped reel's tag still
+   tells you how much cable is on it -- lbs used/of tail are the ones that
+   are blank unless this reel was actually weight-capped. */
 function spoolCSV(){
-  var rows=[["Spool #","Reel ID","Cable","Conductor spec","Colors","Reel of","Reel length ft",
-             "Feet used","Feet of tail","Pulls on reel","Area"]];
+  var rows=[["Spool #","Reel ID","Cable","Conductor spec","Colors","Reel of","Reel cap",
+             "Feet used","Feet of tail","Lbs used","Lbs of tail","Pulls on reel","Area"]];
   S.result.cables.forEach(function(x){x.reels.forEach(function(b){
-    rows.push([b.no,b.id,x.c,x.spec||"",x.colors,b.idx+" of "+b.of,f1(b.cap),
-      f1(b.used),f1(b.tail),b.items.length,b.area||""]);});});
+    var isWt=b.capBy==="wt";
+    rows.push([b.no,b.id,x.c,x.spec||"",x.colors,b.idx+" of "+b.of,
+      f1(b.cap)+(isWt?" lbs":" ft"),
+      f1(b.usedFt),isWt?"":f1(b.tail),
+      b.usedWt>0?f1(b.usedWt):"",isWt?f1(b.tail):"",
+      b.items.length,b.area||""]);});});
   return csv(rows);
 }
 /* This is the sheet a foreman hands to a supplier, so it stays limited to
@@ -1598,12 +1660,14 @@ function spoolCSV(){
    not the purchase -- they're already on the spool tags and pull sheet
    exports. (Spool number *ranges* used to live here too, formatted like
    "5-19" -- Excel's CSV import reliably misreads that as a date on open,
-   which is the other reason it doesn't belong on an order sheet.) */
+   which is the other reason it doesn't belong on an order sheet.) Total
+   feet always uses x.ft (the real sum of pull lengths), never the packed
+   total, since that would silently be pounds for a weight-capped cable. */
 function reelCSV(){
-  var rows=[["Cable","Conductor spec","Colors","Reel length ft","Reels to order","Total feet"]];
+  var rows=[["Cable","Conductor spec","Colors","Reel cap","Reels to order","Total feet","Total lbs"]];
   S.result.cables.forEach(function(x){
-    rows.push([x.c,x.spec||"",x.colors,f1(x.cap),x.reels.length,
-      f1(x.reels.reduce(function(a,b){return a+b.used;},0))]);});
+    rows.push([x.c,x.spec||"",x.colors,f1(x.cap)+(x.capBy==="wt"?" lbs":" ft"),x.reels.length,
+      f1(x.ft),x.wt>0?f1(x.wt):""]);});
   return csv(rows);
 }
 
@@ -1875,6 +1939,7 @@ function bNeutralRuleMatches(r){
 function bBuildPulls(){
   var waste=parseFloat($("bWaste").value)||0;
   var out=[];
+  function wtOf(id,each){var k=SB.key[id];return each*((k&&k.lbft)||0);}
   bRecords().ok.forEach(function(r){
     var hv=isHighVolt(r.voltsRaw);
     if(hv==null)hv=SB.defVoltClass==="high";
@@ -1882,13 +1947,20 @@ function bBuildPulls(){
     var each=r.len+sA+eA+r.adj+waste;
     r.terms.forEach(function(term){
       term.circuits.forEach(function(cnum){
-        out.push({run:r,color:phaseColor(cnum,hv),size:r.wireRaw||"?",role:"phase",circuit:cnum,len:each,base:r.len});
+        var color=phaseColor(cnum,hv),size=r.wireRaw||"?";
+        out.push({run:r,color:color,size:size,role:"phase",circuit:cnum,len:each,
+          wt:wtOf(color+" "+size,each),base:r.len});
       });
-      if(term.neutral)
-        out.push({run:r,color:neutralColor(hv),size:resolveNeutralSize(r,term),role:"neutral",
-          circuits:term.circuits.slice(),shared:term.shared,len:each,base:r.len});
+      if(term.neutral){
+        var ncolor=neutralColor(hv),nsize=resolveNeutralSize(r,term);
+        out.push({run:r,color:ncolor,size:nsize,role:"neutral",
+          circuits:term.circuits.slice(),shared:term.shared,len:each,
+          wt:wtOf(ncolor+" "+nsize,each),base:r.len});
+      }
     });
-    out.push({run:r,color:"Green",size:r.groundRaw||"?",role:"ground",len:each,base:r.len});
+    var gsize=r.groundRaw||"?";
+    out.push({run:r,color:"Green",size:gsize,role:"ground",len:each,
+      wt:wtOf("Green "+gsize,each),base:r.len});
   });
   return out;
 }
@@ -2223,15 +2295,28 @@ function drawBKey(){
   if(!ids.length){$("bKeytbl").innerHTML="";return;}
   var counts={};bBuildPulls().forEach(function(p){var id=p.color+" "+p.size;counts[id]=(counts[id]||0)+1;});
   $("bKeytbl").innerHTML='<thead><tr><th>Color / Size</th><th style="width:64px">Pulls</th>'+
-    '<th style="width:120px">Reel ft</th></tr></thead><tbody>'+
-    ids.map(function(id){var v=SB.key[id]||{reel:null};
+    '<th style="width:90px">Cap by</th><th style="width:100px">Reel ft</th>'+
+    '<th style="width:100px">Max lbs</th><th style="width:80px">lb/ft</th></tr></thead><tbody>'+
+    ids.map(function(id){var v=SB.key[id]||(SB.key[id]={reel:null}),isWt=v.capBy==="wt";
       return "<tr><td><b>"+esc(id)+"</b></td>"+
         '<td class="num">'+(counts[id]||0)+"</td>"+
+        '<td><select data-c="'+esc(id)+'" data-p="capBy">'+
+          '<option value="len"'+(isWt?"":" selected")+">Length</option>"+
+          '<option value="wt"'+(isWt?" selected":"")+">Weight</option></select></td>"+
         '<td><input class="num" type="number" min="1" max="5000" list="putups" data-c="'+esc(id)+
-        '" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"></td></tr>';
+        '" data-p="reel" value="'+(v.reel==null?"":v.reel)+'" placeholder="default"'+(isWt?" disabled":"")+'></td>'+
+        '<td><input class="num" type="number" min="1" data-c="'+esc(id)+'" data-p="reelLbs" value="'+
+        (v.reelLbs==null?"":v.reelLbs)+'" placeholder="default"'+(isWt?"":" disabled")+'></td>'+
+        '<td><input class="num" type="number" min="0" step="any" data-c="'+esc(id)+'" data-p="lbft" value="'+
+        (v.lbft==null?"":v.lbft)+'"'+(isWt?"":" disabled")+'></td></tr>';
     }).join("")+"</tbody>";
   Array.prototype.forEach.call($("bKeytbl").querySelectorAll("[data-c]"),function(el){
-    el.onchange=function(){var m=reelVal(el.value);SB.key[el.dataset.c].reel=m;if(m!=null)el.value=m;};
+    el.onchange=function(){var o=SB.key[el.dataset.c],p=el.dataset.p;
+      if(p==="reel"){var m=reelVal(el.value);o.reel=m;if(m!=null)el.value=m;}
+      else if(p==="reelLbs"){var n=parseFloat(el.value);o.reelLbs=isFinite(n)&&n>0?n:null;}
+      else if(p==="lbft"){var n2=parseFloat(el.value);o.lbft=isFinite(n2)&&n2>=0?n2:null;}
+      else if(p==="capBy")o.capBy=el.value;
+      drawBKey();};
   });
 }
 
@@ -2242,21 +2327,26 @@ function bRun(){
   var pulls=bBuildPulls();
   if(!pulls.length){alert("No usable rows.");return;}
   var mode=$("bMode").value,hold=parseFloat($("bHold").value)||0;
-  var defReel=reelVal($("bDefReel").value)||2500;
+  var defReel=reelVal($("bDefReel").value)||2500,defReelLbs=parseFloat($("bDefReelLbs").value)||0;
   var byC={};pulls.forEach(function(p){var id=p.color+" "+p.size;(byC[id]=byC[id]||[]).push(p);});
-  var res={groups:[],over:[],pulls:pulls,totPulls:pulls.length,totFt:0,totReels:0,naive:0};
+  var res={groups:[],over:[],pulls:pulls,totPulls:pulls.length,totFt:0,totWt:0,totReels:0,naive:0};
   Object.keys(byC).sort().forEach(function(id){
-    var items=byC[id],color=items[0].color,size=items[0].size;
-    var capFull=(SB.key[id]&&SB.key[id].reel)||defReel,cap=Math.max(1,capFull-hold);
+    var items=byC[id],color=items[0].color,size=items[0].size,k=SB.key[id]||{reel:null};
+    var capBy=k.capBy==="wt"?"wt":"len";
+    var capFull=capBy==="wt"?(k.reelLbs||defReelLbs||0):(k.reel||defReel),cap=Math.max(1,capFull-hold);
     var ft=items.reduce(function(a,b){return a+b.len;},0);
-    res.totFt+=ft;res.naive+=Math.ceil(ft/capFull);
-    var r=pack(items,cap,mode);
+    var wt=items.reduce(function(a,b){return a+(b.wt||0);},0);
+    var packedVal=capBy==="wt"?wt:ft;
+    res.totFt+=ft;res.totWt+=wt;res.naive+=Math.ceil(packedVal/capFull);
+    var r=pack(items,cap,mode,capBy);
     r.over.forEach(function(o){res.over.push(o);});
     r.bins.forEach(function(b,i){
       b.id=id.replace(/[^A-Za-z0-9]+/g,"-").toUpperCase()+"-R"+String(i+1).padStart(2,"0");
-      b.idx=i+1;b.of=r.bins.length;b.cap=capFull;b.tail=capFull-b.used;});
+      b.idx=i+1;b.of=r.bins.length;b.cap=capFull;b.capBy=capBy;b.tail=capFull-b.used;
+      b.usedFt=b.items.reduce(function(a,p){return a+p.len;},0);
+      b.usedWt=b.items.reduce(function(a,p){return a+(p.wt||0);},0);});
     res.totReels+=r.bins.length;
-    res.groups.push({id:id,color:color,size:size,reels:r.bins,ft:ft,pulls:items.length,cap:capFull});
+    res.groups.push({id:id,color:color,size:size,reels:r.bins,ft:ft,wt:wt,pulls:items.length,cap:capFull,capBy:capBy});
   });
   var seq=0;
   res.groups.forEach(function(x){x.reels.forEach(function(b){b.no=++seq;});});
@@ -2272,30 +2362,33 @@ function bRender(res){
   h+='<div class="stats">'+
     '<div class="stat"><b>'+res.totReels+'</b><span>Reels to order</span></div>'+
     '<div class="stat"><b>'+fc(res.totFt)+'</b><span>Total feet</span></div>'+
+    (res.totWt>0?'<div class="stat"><b>'+fc(res.totWt)+'</b><span>Total lbs</span></div>':"")+
     '<div class="stat"><b>'+res.totPulls+'</b><span>Individual pulls</span></div>'+
     '<div class="stat'+(res.over.length?" bad":"")+'"><b>'+res.over.length+'</b><span>Won’t fit a reel</span></div></div>';
   var diff=res.totReels-res.naive;
   if(diff>0)h+='<div class="iss stop"><h6>'+diff+" more reel"+(diff>1?"s":"")+
-    " than total feet ÷ reel length</h6><p>A pull can’t be spliced across two reels, so a footage total always under-counts.</p></div>";
+    " than a simple footage/weight ÷ capacity estimate</h6><p>A pull can’t be spliced across two reels, so that estimate always under-counts.</p></div>";
 
   res.groups.forEach(function(x){
     h+='<div class="desig"><div class="desig-hd"><h4>'+esc(x.id)+'</h4><div class="lbl">'+
-      f1(x.cap)+" ft reels &middot; "+x.pulls+" pulls</div></div>";
+      f1(x.cap)+(x.capBy==="wt"?" lb":" ft")+" reels &middot; "+x.pulls+" pulls</div></div>";
     x.reels.forEach(function(b){
+      var unit=b.capBy==="wt"?"lbs":"ft";
       h+='<div class="reel"><div class="reel-hd"><div class="reel-id">'+
         '<span class="spoolno">Spool '+String(b.no).padStart(3,"0")+"</span>"+
         esc(b.id)+' <span class="reel-meta">'+b.idx+" of "+b.of+'</span></div><div class="reel-meta">'+
-        f1(b.used)+" / "+f1(b.cap)+" ft &middot; "+f1(b.tail)+" ft tail &middot; "+
-        Math.round(b.used/b.cap*100)+"%</div></div>";
-      h+='<div class="bar">'+b.items.map(function(p,i){var w=p.len/b.cap*100;
+        f1(b.used)+" / "+f1(b.cap)+" "+unit+" &middot; "+f1(b.tail)+" "+unit+" tail &middot; "+
+        Math.round(b.used/b.cap*100)+"%"+(b.capBy==="wt"?" &middot; "+fc(b.usedFt)+" ft":"")+"</div></div>";
+      h+='<div class="bar">'+b.items.map(function(p,i){var pv=b.capBy==="wt"?p.wt:p.len,w=pv/b.cap*100;
         return '<div class="seg" style="width:'+w+"%;background:"+(WIRE_HEX[p.color]||"#666")+
           ";color:"+(WIRE_TEXT[p.color]||"#fff")+";opacity:"+(i%2?.85:1)+
           (p.color==="White"?";box-shadow:inset 0 0 0 1px rgba(25,28,30,.4)":"")+
-          '" title="'+esc((p.run.start||"?")+" → "+(p.run.end||p.run.start||"?"))+" "+f1(p.len)+' ft">'+
-          (w>9?f1(p.len):"")+"</div>";
+          '" title="'+esc((p.run.start||"?")+" → "+(p.run.end||p.run.start||"?"))+" "+f1(pv)+" "+unit+'">'+
+          (w>9?f1(pv):"")+"</div>";
       }).join("")+"</div>";
       h+='<div class="reel-pulls">'+b.items.map(function(p){
-        return "<span>"+esc(p.run.start||"?")+"→"+esc(p.run.end||p.run.start||"?")+" <b>"+f1(p.len)+"</b></span>";
+        var pv=b.capBy==="wt"?p.wt:p.len;
+        return "<span>"+esc(p.run.start||"?")+"→"+esc(p.run.end||p.run.start||"?")+" <b>"+f1(pv)+"</b></span>";
       }).join("")+"</div></div>";
     });
     h+="</div>";
@@ -2339,31 +2432,43 @@ function bRunsCSV(pulls){
   return csv(rows);
 }
 function bPullCSV(){
-  var rows=[["Spool #","Reel ID","Color","Size","Role","Run From","Run To","Cut length ft","Reel ft","Source row"]];
-  function line(no,id,cap,p){
-    return [no,id,p.color,p.size,p.role,p.run.start||"",p.run.end||p.run.start||"",f1(p.len),f1(cap),p.run.i+2];
+  var rows=[["Spool #","Reel ID","Color","Size","Role","Run From","Run To",
+             "Cut length ft","Cut weight lbs","Reel cap","Source row"]];
+  function line(no,id,cap,capBy,p){
+    return [no,id,p.color,p.size,p.role,p.run.start||"",p.run.end||p.run.start||"",
+            f1(p.len),p.wt?f1(p.wt):"",f1(cap)+(capBy==="wt"?" lbs":" ft"),p.run.i+2];
   }
   SB.result.groups.forEach(function(x){x.reels.forEach(function(b){
-    b.items.forEach(function(p){rows.push(line(b.no,b.id,b.cap,p));});});});
-  SB.result.over.forEach(function(p){rows.push(line("","OVERSIZE",0,p));});
+    b.items.forEach(function(p){rows.push(line(b.no,b.id,b.cap,b.capBy,p));});});});
+  SB.result.over.forEach(function(p){rows.push(line("","OVERSIZE",0,"len",p));});
   return csv(rows);
 }
+/* Feet used/of tail is always real footage (b.usedFt) regardless of what
+   the reel was actually capped on; lbs used/of tail are blank unless this
+   reel was actually weight-capped -- same shape as One Line's spoolCSV. */
 function bSpoolCSV(){
-  var rows=[["Spool #","Reel ID","Color","Size","Reel length ft","Feet used","Feet of tail","Pulls on reel"]];
+  var rows=[["Spool #","Reel ID","Color","Size","Reel cap","Feet used","Feet of tail",
+             "Lbs used","Lbs of tail","Pulls on reel"]];
   SB.result.groups.forEach(function(x){x.reels.forEach(function(b){
-    rows.push([b.no,b.id,x.color,x.size,f1(b.cap),f1(b.used),f1(b.tail),b.items.length]);});});
+    var isWt=b.capBy==="wt";
+    rows.push([b.no,b.id,x.color,x.size,f1(b.cap)+(isWt?" lbs":" ft"),
+      f1(b.usedFt),isWt?"":f1(b.tail),
+      b.usedWt>0?f1(b.usedWt):"",isWt?f1(b.tail):"",
+      b.items.length]);});});
   return csv(rows);
 }
 /* Same reasoning as One Line's reelCSV -- this is the buy sheet, so it's
    just color/size/put-up/count/exact footage. Spool numbers, pulls, and
    tail are tracking detail for the crew, already on the other exports (and
    a spool-number range formatted "5-19" is exactly the string Excel's CSV
-   import misreads as a date on open). */
+   import misreads as a date on open). Total feet always uses x.ft (the real
+   sum of pull lengths), never the packed total, since that would silently
+   be pounds for a weight-capped color/size. */
 function bReelCSV(){
-  var rows=[["Color","Size","Reel length ft","Reels to order","Total feet"]];
+  var rows=[["Color","Size","Reel cap","Reels to order","Total feet","Total lbs"]];
   SB.result.groups.forEach(function(x){
-    rows.push([x.color,x.size,f1(x.cap),x.reels.length,
-      f1(x.reels.reduce(function(a,b){return a+b.used;},0))]);
+    rows.push([x.color,x.size,f1(x.cap)+(x.capBy==="wt"?" lbs":" ft"),x.reels.length,
+      f1(x.ft),x.wt>0?f1(x.wt):""]);
   });
   return csv(rows);
 }
